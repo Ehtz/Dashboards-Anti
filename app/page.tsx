@@ -1,5 +1,5 @@
 import BusinessMatrixDashboard from '@/components/BusinessMatrixDashboard';
-//test  
+//test 
 export default function Home() {
   return (
     <BusinessMatrixDashboard />
