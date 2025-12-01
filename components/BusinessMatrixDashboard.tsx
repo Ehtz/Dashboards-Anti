@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, Trash2, RefreshCw, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson } from 'lucide-react';
 
 // --- Types & Constants ---
 
@@ -470,11 +470,11 @@ export default function BusinessMatrixDashboard() {
     const [businesses, setBusinesses] = useState(INITIAL_BUSINESSES);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    // New Business Form State
-    const [newBizName, setNewBizName] = useState('');
-    const [newBizDesc, setNewBizDesc] = useState('');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analysisComplete, setAnalysisComplete] = useState(false);
+    // Import/Export State
+    const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
+    const [jsonInput, setJsonInput] = useState('');
+    const [importError, setImportError] = useState('');
+    const [importSuccess, setImportSuccess] = useState('');
 
     // Initialize all possible score keys to 50
     const initialScores = useMemo(() => {
@@ -485,46 +485,65 @@ export default function BusinessMatrixDashboard() {
 
     const [newBizScores, setNewBizScores] = useState(initialScores);
 
-    // Simulated AI Analyzer
-    const analyzeBusiness = async () => {
-        if (!newBizDesc) return;
-        setIsAnalyzing(true);
+    const handleImport = () => {
+        if (!jsonInput) return;
+        setImportError('');
+        setImportSuccess('');
 
         try {
-            const response = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: newBizDesc }),
+            const parsed = JSON.parse(jsonInput);
+            const businessesToAdd = Array.isArray(parsed) ? parsed : [parsed];
+
+            // Basic validation
+            const validBusinesses = businessesToAdd.map((b: any, index: number) => {
+                if (!b.name) throw new Error(`Item ${index + 1} missing 'name'`);
+
+                // Ensure scores exist or use defaults
+                const scores = { ...initialScores, ...(b.scores || {}) };
+
+                // Generate ID and color if missing
+                const newId = Math.max(...businesses.map(b => b.id), 0) + index + 1;
+                const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+                return {
+                    id: b.id || newId,
+                    name: b.name,
+                    color: b.color || randomColor,
+                    desc: b.desc || '',
+                    scores: scores,
+                    initialScores: scores, // Set initial to current for reset
+                    reasoning: b.reasoning || "Imported via JSON"
+                };
             });
 
-            if (!response.ok) throw new Error('Analysis failed');
+            setBusinesses(prev => [...prev, ...validBusinesses]);
+            setImportSuccess(`Successfully imported ${validBusinesses.length} business(es)`);
+            setJsonInput('');
+            setTimeout(() => {
+                setShowAddModal(false);
+                setImportSuccess('');
+            }, 1500);
 
-            const data = await response.json();
-            setNewBizScores(data.scores);
-            setAnalysisComplete(true);
-        } catch (error) {
-            console.error(error);
-            // Fallback to random if API fails (or show error)
-            const scores = { ...newBizScores };
-            Object.keys(scores).forEach(k => {
-                if (scores[k] === 50) scores[k] = Math.floor(Math.random() * 40) + 30;
-            });
-            setNewBizScores(scores);
-            setAnalysisComplete(true);
-        } finally {
-            setIsAnalyzing(false);
+        } catch (error: any) {
+            console.error('Import failed:', error);
+            setImportError(error.message || 'Invalid JSON format');
         }
     };
 
-    const handleAddBusiness = () => {
-        if (!newBizName) return;
+    const handleCopyToClipboard = () => {
+        const jsonString = JSON.stringify(businesses, null, 2);
+        navigator.clipboard.writeText(jsonString);
+        setImportSuccess('Copied to clipboard!');
+        setTimeout(() => setImportSuccess(''), 2000);
     };
 
+
+
     const resetForm = () => {
-        setNewBizName('');
-        setNewBizDesc('');
-        setAnalysisComplete(false);
-        setNewBizScores(initialScores);
+        setJsonInput('');
+        setImportError('');
+        setImportSuccess('');
     };
 
     const deleteBusiness = (id: number) => {
@@ -569,35 +588,7 @@ export default function BusinessMatrixDashboard() {
         return groups;
     }, []);
 
-    // Pattern Analysis State
-    const [showPatternModal, setShowPatternModal] = useState(false);
-    const [patternQuery, setPatternQuery] = useState('');
-    const [patternResult, setPatternResult] = useState('');
-    const [isAnalyzingPattern, setIsAnalyzingPattern] = useState(false);
 
-    const analyzePatterns = async () => {
-        if (!patternQuery) return;
-        setIsAnalyzingPattern(true);
-        setPatternResult('');
-
-        try {
-            const response = await fetch('/api/patterns', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ businesses, query: patternQuery }),
-            });
-
-            if (!response.ok) throw new Error('Pattern analysis failed');
-
-            const data = await response.json();
-            setPatternResult(data.analysis);
-        } catch (error) {
-            console.error(error);
-            setPatternResult('Failed to analyze patterns. Please try again.');
-        } finally {
-            setIsAnalyzingPattern(false);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -617,18 +608,14 @@ export default function BusinessMatrixDashboard() {
 
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => setShowPatternModal(true)}
-                            className="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm text-sm md:text-base"
-                        >
-                            <Brain size={18} />
-                            <span className="hidden md:inline">Ask AI</span>
-                        </button>
-                        <button
-                            onClick={() => setShowAddModal(true)}
+                            onClick={() => {
+                                setShowAddModal(true);
+                                setActiveTab('import');
+                            }}
                             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm text-sm md:text-base"
                         >
-                            <Plus size={18} />
-                            New Analysis
+                            <FileJson size={18} />
+                            Manage Data
                         </button>
                     </div>
                 </div>
@@ -689,105 +676,105 @@ export default function BusinessMatrixDashboard() {
                 </div>
             </main>
 
-            {/* Add Business Modal */}
+            {/* Import/Export Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 
                         {/* Modal Header */}
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
-                            <h2 className="text-xl font-bold text-slate-800">New Strategic Analysis</h2>
+                            <h2 className="text-xl font-bold text-slate-800">Data Manager</h2>
                             <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
 
-                        {/* Modal Scrollable Content */}
-                        <div className="p-6 overflow-y-auto custom-scrollbar">
-
-                            {/* Step 1: Input */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div className="md:col-span-2 space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1">Business Name</label>
-                                        <input
-                                            type="text"
-                                            value={newBizName}
-                                            onChange={(e) => setNewBizName(e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="e.g. Uber, Slack, MyStartup.ai"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1">Insider Info / Description / URL</label>
-                                        <textarea
-                                            value={newBizDesc}
-                                            onChange={(e) => setNewBizDesc(e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-32 resize-none text-sm"
-                                            placeholder="Paste your raw notes here. Our system will analyze text patterns to score against the 19 matrices..."
-                                        />
-                                    </div>
+                        {/* Tabs */}
+                        <div className="flex border-b border-slate-200">
+                            <button
+                                onClick={() => setActiveTab('import')}
+                                className={`flex-1 py-4 text-sm font-bold text-center border-b-2 transition-colors ${activeTab === 'import' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    <Upload size={16} />
+                                    Import JSON
                                 </div>
-
-                                <div className="flex flex-col justify-end">
-                                    {!analysisComplete ? (
-                                        <button
-                                            onClick={analyzeBusiness}
-                                            disabled={!newBizName || !newBizDesc || isAnalyzing}
-                                            className="w-full h-32 bg-indigo-600 disabled:bg-indigo-300 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-3 hover:bg-indigo-700 transition-colors shadow-lg"
-                                        >
-                                            {isAnalyzing ? <RefreshCw className="animate-spin" size={32} /> : <Brain size={32} />}
-                                            <span>{isAnalyzing ? 'Extracting Patterns...' : 'Run Deep Analysis'}</span>
-                                        </button>
-                                    ) : (
-                                        <div className="w-full h-32 flex flex-col items-center justify-center bg-green-50 text-green-700 rounded-xl border-2 border-green-200">
-                                            <Check size={32} className="mb-2" />
-                                            <span className="font-bold">Analysis Complete</span>
-                                            <button onClick={() => setAnalysisComplete(false)} className="text-xs underline mt-2 hover:text-green-800">Reset</button>
-                                        </div>
-                                    )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('export')}
+                                className={`flex-1 py-4 text-sm font-bold text-center border-b-2 transition-colors ${activeTab === 'export' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    <Download size={16} />
+                                    Export JSON
                                 </div>
-                            </div>
+                            </button>
+                        </div>
 
-                            {/* Step 2: Review Scores */}
-                            {analysisComplete && (
-                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+
+                            {activeTab === 'import' && (
+                                <div className="space-y-4 h-full flex flex-col">
                                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 flex items-start gap-3">
                                         <Info className="shrink-0 mt-0.5" size={16} />
-                                        <p><strong>System Insight:</strong> We've auto-populated the 19 strategic dimensions below based on your text. Please fine-tune the sliders if you have deeper insider knowledge.</p>
+                                        <p>Paste a JSON array of business objects or a single business object. Each object should have a <strong>name</strong> and optional <strong>scores</strong>.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
-                                        {Object.entries(newBizScores).map(([key, value]) => (
-                                            <div key={key} className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                                <div className="flex justify-between text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">
-                                                    <span>{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                                    <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{value}</span>
-                                                </div>
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="100"
-                                                    value={value}
-                                                    onChange={(e) => setNewBizScores({ ...newBizScores, [key]: parseInt(e.target.value) })}
-                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                                />
-                                                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                                                    <span>Low</span>
-                                                    <span>High</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <textarea
+                                        value={jsonInput}
+                                        onChange={(e) => setJsonInput(e.target.value)}
+                                        className="w-full flex-1 p-4 border border-slate-300 rounded-lg font-mono text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[300px]"
+                                        placeholder={`[\n  {\n    "name": "New Business",\n    "scores": { "frequency": 80, "netMargin": 40 }\n  }\n]`}
+                                    />
+
+                                    {importError && (
+                                        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium">
+                                            Error: {importError}
+                                        </div>
+                                    )}
+
+                                    {importSuccess && (
+                                        <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                                            <Check size={16} /> {importSuccess}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleImport}
+                                        disabled={!jsonInput}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white py-3 rounded-xl font-bold transition-colors shadow-lg"
+                                    >
+                                        Import Data
+                                    </button>
+                                </div>
+                            )}
+
+                            {activeTab === 'export' && (
+                                <div className="space-y-4 h-full flex flex-col">
+                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-600">
+                                        Current state of all businesses in JSON format. Copy this to save your data or transfer it to another session.
                                     </div>
 
-                                    <div className="pt-4 border-t border-slate-200">
-                                        <button
-                                            onClick={handleAddBusiness}
-                                            className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-xl transform hover:-translate-y-0.5 text-lg"
-                                        >
-                                            Add {newBizName} to Dashboard
-                                        </button>
-                                    </div>
+                                    <textarea
+                                        readOnly
+                                        value={JSON.stringify(businesses, null, 2)}
+                                        className="w-full flex-1 p-4 border border-slate-300 rounded-lg font-mono text-xs bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[300px]"
+                                    />
+
+                                    {importSuccess && (
+                                        <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                                            <Check size={16} /> {importSuccess}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleCopyToClipboard}
+                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <Copy size={18} />
+                                        Copy to Clipboard
+                                    </button>
                                 </div>
                             )}
 
@@ -796,55 +783,9 @@ export default function BusinessMatrixDashboard() {
                 </div>
             )}
 
-            {/* Pattern Analysis Modal */}
-            {showPatternModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
-                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                <Brain className="text-indigo-600" />
-                                Pattern Understanding
-                            </h2>
-                            <button onClick={() => setShowPatternModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <X size={24} />
-                            </button>
-                        </div>
 
-                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Ask about patterns, correlations, or opportunities:</label>
-                                    <textarea
-                                        value={patternQuery}
-                                        onChange={(e) => setPatternQuery(e.target.value)}
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-32 resize-none text-sm"
-                                        placeholder="e.g., 'What is the correlation between shipping speed and quality in this dataset?' or 'Which business has the best unit economics?'"
-                                    />
-                                </div>
 
-                                <button
-                                    onClick={analyzePatterns}
-                                    disabled={!patternQuery || isAnalyzingPattern}
-                                    className="w-full py-3 bg-indigo-600 disabled:bg-indigo-300 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2"
-                                >
-                                    {isAnalyzingPattern ? <RefreshCw className="animate-spin" size={20} /> : <Search size={20} />}
-                                    <span>{isAnalyzingPattern ? 'Analyzing...' : 'Ask AI'}</span>
-                                </button>
 
-                                {patternResult && (
-                                    <div className="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                        <h3 className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Analysis Result</h3>
-                                        <div className="prose prose-sm text-slate-600 max-w-none whitespace-pre-wrap">
-                                            {patternResult}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
+        </div >
     );
 }
