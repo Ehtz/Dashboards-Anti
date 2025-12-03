@@ -397,69 +397,74 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
                 <h3 className="font-bold text-slate-800 text-sm">{matrix.title}</h3>
             </div>
 
-            {/* Chart Area */}
-            <div
-                ref={containerRef}
-                className="relative aspect-square w-full bg-slate-50 border border-slate-300 rounded-lg mb-4 cursor-crosshair overflow-hidden"
-            >
-
-                {/* Grid Lines */}
-                <div className="absolute inset-0 flex pointer-events-none">
-                    <div className="w-1/2 border-r border-slate-300 border-dashed h-full"></div>
-                    <div className="w-1/2 h-full"></div>
-                </div>
-                <div className="absolute inset-0 flex flex-col pointer-events-none">
-                    <div className="h-1/2 border-b border-slate-300 border-dashed w-full"></div>
-                    <div className="h-1/2 w-full"></div>
+            {/* Chart Wrapper with space for axes */}
+            <div className="relative pl-8 pb-8 ">
+                {/* Y Axis Label */}
+                <div className="absolute left-0 top-0 bottom-8 flex items-center justify-center pointer-events-none w-8">
+                    <span className="text-xs font-bold -rotate-90 text-red-600 whitespace-nowrap tracking-wider">{matrix.yAxis}</span>
                 </div>
 
-                {/* Quadrant Labels */}
-                <span className="absolute top-2 left-2 text-[9px] text-slate-400 font-medium leading-tight max-w-[45%] pointer-events-none">{matrix.highLow}</span>
-                <span className="absolute top-2 right-2 text-[9px] text-slate-400 font-medium text-right leading-tight max-w-[45%] pointer-events-none">{matrix.highHigh}</span>
-                <span className="absolute bottom-2 left-2 text-[9px] text-slate-400 font-medium leading-tight max-w-[45%] pointer-events-none">{matrix.lowLow}</span>
-                <span className="absolute bottom-2 right-2 text-[9px] text-slate-400 font-medium text-right leading-tight max-w-[45%] pointer-events-none">{matrix.lowHigh}</span>
+                {/* Chart Area */}
+                <div
+                    ref={containerRef}
+                    className="relative aspect-square w-full bg-slate-50 border border-slate-300 rounded-lg cursor-crosshair overflow-hidden"
+                >
 
-                {/* Axis Labels */}
-                <div className="absolute -left-6 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-[9px] font-bold text-slate-500 -rotate-90 whitespace-nowrap tracking-wider">{matrix.yAxis}</span>
-                </div>
-                <div className="absolute -bottom-6 left-0 right-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-[9px] font-bold text-slate-500 whitespace-nowrap tracking-wider">{matrix.xAxis}</span>
-                </div>
+                    {/* Grid Lines */}
+                    <div className="absolute inset-0 flex pointer-events-none">
+                        <div className="w-1/2 border-r border-slate-300 border-dashed h-full"></div>
+                        <div className="w-1/2 h-full"></div>
+                    </div>
+                    <div className="absolute inset-0 flex flex-col pointer-events-none">
+                        <div className="h-1/2 border-b border-slate-300 border-dashed w-full"></div>
+                        <div className="h-1/2 w-full"></div>
+                    </div>
 
-                {/* Plot Points */}
-                {businesses.map((biz: any) => {
-                    const x = biz.scores[matrix.xKey] || 50;
-                    const y = biz.scores[matrix.yKey] || 50;
-                    const isDragging = draggingId === biz.id;
+                    {/* Quadrant Labels */}
+                    <span className="absolute top-2 left-2 text-[9px] text-slate-400 font-medium leading-tight max-w-[45%] pointer-events-none">{matrix.highLow}</span>
+                    <span className="absolute top-2 right-2 text-[9px] text-slate-400 font-medium text-right leading-tight max-w-[45%] pointer-events-none">{matrix.highHigh}</span>
+                    <span className="absolute bottom-2 left-2 text-[9px] text-slate-400 font-medium leading-tight max-w-[45%] pointer-events-none">{matrix.lowLow}</span>
+                    <span className="absolute bottom-2 right-2 text-[9px] text-slate-400 font-medium text-right leading-tight max-w-[45%] pointer-events-none">{matrix.lowHigh}</span>
 
-                    return (
-                        <div
-                            key={biz.id}
-                            onMouseDown={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
-                            onTouchStart={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
-                            className={`absolute w-5 h-5 rounded-full border-2 shadow-md transform -translate-x-1/2 -translate-y-1/2 transition-shadow z-20 
+                    {/* Plot Points */}
+                    {businesses.map((biz: any) => {
+                        const x = biz.scores[matrix.xKey] || 50;
+                        const y = biz.scores[matrix.yKey] || 50;
+                        const isDragging = draggingId === biz.id;
+
+                        return (
+                            <div
+                                key={biz.id}
+                                onMouseDown={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
+                                onTouchStart={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
+                                className={`absolute w-5 h-5 rounded-full border-2 shadow-md transform -translate-x-1/2 -translate-y-1/2 transition-shadow z-20 
                 ${isDragging ? 'cursor-grabbing scale-110 ring-2 ring-offset-2 ring-slate-400' : 'cursor-grab hover:scale-125'}
               `}
-                            style={{
-                                left: `${x}%`,
-                                bottom: `${y}%`,
-                                backgroundColor: biz.color,
-                                borderColor: isDragging ? '#fff' : 'white'
-                            }}
-                        >
-                            {/* Tooltip only if not dragging */}
-                            {!isDragging && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-slate-800 text-white text-xs rounded p-2 z-50 pointer-events-none shadow-lg">
-                                    <div className="font-bold">{biz.name}</div>
-                                    <div className="text-[10px] opacity-80 mt-1">
-                                        X: {x} | Y: {y}
+                                style={{
+                                    left: `${x}%`,
+                                    bottom: `${y}%`,
+                                    backgroundColor: biz.color,
+                                    borderColor: isDragging ? '#fff' : 'white'
+                                }}
+                            >
+                                {/* Tooltip only if not dragging */}
+                                {!isDragging && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-slate-800 text-white text-xs rounded p-2 z-50 pointer-events-none shadow-lg">
+                                        <div className="font-bold">{biz.name}</div>
+                                        <div className="text-[10px] opacity-80 mt-1">
+                                            X: {x} | Y: {y}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* X Axis Label */}
+                <div className="absolute bottom-0 left-8 right-0 flex items-center justify-center pointer-events-none h-8">
+                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.xAxis}</span>
+                </div>
             </div>
         </div>
     );
