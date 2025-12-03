@@ -25,7 +25,7 @@ interface CardProps {
 }
 
 const Card = ({ children, className = "" }: CardProps) => (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}>
+    <div className={`bg-neutral-900 rounded-xl border border-neutral-800 shadow-sm ${className}`}>
         {children}
     </div>
 );
@@ -42,9 +42,9 @@ const SectionHeader = ({ icon: Icon, title, description }: SectionHeaderProps) =
             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                 <Icon size={20} />
             </div>
-            <h3 className="font-semibold text-slate-800">{title}</h3>
+            <h3 className="font-semibold text-slate-200">{title}</h3>
         </div>
-        {description && <p className="text-sm text-slate-500 ml-11">{description}</p>}
+        {description && <p className="text-sm text-slate-400 ml-11">{description}</p>}
     </div>
 );
 
@@ -65,7 +65,7 @@ interface InputGroupProps {
 const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0, max = 1000, step = 1, helpText, caption, className = "" }: InputGroupProps) => (
     <div className={`mb-4 ${className}`}>
         <div className="flex justify-between mb-1.5">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
+            <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
                 {label}
                 {helpText && (
                     <div className="group relative cursor-help">
@@ -76,7 +76,7 @@ const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0,
                     </div>
                 )}
             </label>
-            <span className="text-sm font-bold text-indigo-600 font-mono">
+            <span className="text-sm font-bold text-indigo-400 font-mono">
                 {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
             </span>
         </div>
@@ -88,7 +88,7 @@ const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0,
                 step={step}
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="absolute w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:accent-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="absolute w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
             />
         </div>
         {caption && (
@@ -108,8 +108,8 @@ interface StatCardProps {
 }
 
 const StatCard = ({ label, value, subtext, highlight = false, alert = false }: StatCardProps) => (
-    <div className={`p-4 rounded-xl border ${highlight ? 'bg-indigo-600 border-indigo-600 text-white' : alert ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
-        <div className={`text-sm font-medium mb-1 ${highlight ? 'text-indigo-100' : 'text-slate-500'}`}>{label}</div>
+    <div className={`p-4 rounded-xl border ${highlight ? 'bg-indigo-900/50 border-indigo-700 text-white' : alert ? 'bg-amber-900/20 border-amber-800' : 'bg-neutral-900 border-neutral-800'}`}>
+        <div className={`text-sm font-medium mb-1 ${highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{label}</div>
         <div className={`text-2xl font-bold font-mono tracking-tight ${alert ? 'text-amber-700' : ''}`}>{value}</div>
         {subtext && <div className={`text-xs mt-1 ${highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{subtext}</div>}
     </div>
@@ -298,7 +298,7 @@ export default function SaaSPricingCalculator() {
                                 y1={scaleY(data.maxY * tick)}
                                 x2={width - padding}
                                 y2={scaleY(data.maxY * tick)}
-                                stroke="#e2e8f0"
+                                stroke="#404040"
                                 strokeDasharray="4 4"
                             />
                             <text
@@ -367,22 +367,22 @@ export default function SaaSPricingCalculator() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+        <div className="min-h-screen bg-black p-4 md:p-8 font-sans text-slate-200">
             <div className="max-w-6xl mx-auto">
 
                 {/* Header */}
                 <header className="mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 mb-4 transition-colors font-medium">
+                    <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400 mb-4 transition-colors font-medium">
                         <ArrowLeft size={16} />
                         Back to Dashboard
                     </Link>
-                    <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
                         <div className="bg-indigo-600 p-2 rounded-lg text-white">
                             <Calculator size={24} />
                         </div>
                         SaaS Revenue Simulator
                     </h1>
-                    <p className="text-slate-500 mt-2 text-lg">
+                    <p className="text-slate-400 mt-2 text-lg">
                         Model your pricing strategy, unit economics, and earnings potential.
                     </p>
                 </header>
@@ -417,7 +417,7 @@ export default function SaaSPricingCalculator() {
                         </Card>
 
                         {/* Unit Economics Controls */}
-                        <Card className="p-6 border-l-4 border-l-emerald-500">
+                        <Card className="p-6 border-l-4 border-l-emerald-600">
                             <SectionHeader
                                 icon={Scale}
                                 title="Unit Economics"
@@ -497,7 +497,7 @@ export default function SaaSPricingCalculator() {
                                 helpText="Cost for each user beyond the included amount."
                             />
                             <div className="pt-4 border-t border-slate-100">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Model Assumptions</p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Model Assumptions</p>
                                 <InputGroup
                                     label="Avg. Seats (Exp. Users)"
                                     value={avgSeatsPerAccount}
@@ -574,40 +574,40 @@ export default function SaaSPricingCalculator() {
                                         <TrendingUp size={20} />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-slate-800">Scaling Projection</h3>
+                                        <h3 className="font-semibold text-slate-200">Scaling Projection</h3>
                                         <p className="text-xs text-slate-400">Revenue vs. Customer Count</p>
                                     </div>
 
                                     {/* Chart Toggle */}
-                                    <div className="flex bg-slate-100 p-1 rounded-lg ml-4">
+                                    <div className="flex bg-neutral-800 p-1 rounded-lg ml-4">
                                         <button
                                             onClick={() => setChartMode('revenue')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'revenue' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'revenue' ? 'bg-neutral-700 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}
                                         >
                                             Revenue
                                         </button>
                                         <button
                                             onClick={() => setChartMode('profit')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'profit' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'profit' ? 'bg-neutral-700 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}
                                         >
                                             Gross Profit
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full self-start md:self-auto">
+                                <div className="flex items-center gap-2 bg-neutral-800 px-3 py-1.5 rounded-full self-start md:self-auto">
                                     <span className="text-xs font-medium text-slate-500">Current Scale:</span>
                                     <input
                                         type="number"
                                         value={totalCustomers}
                                         onChange={(e) => setTotalCustomers(Number(e.target.value))}
-                                        className="w-16 bg-transparent text-sm font-bold text-slate-800 focus:outline-none border-b border-slate-300 focus:border-indigo-500 text-right"
+                                        className="w-16 bg-transparent text-sm font-bold text-slate-200 focus:outline-none border-b border-neutral-600 focus:border-indigo-500 text-right"
                                     />
                                     <span className="text-xs text-slate-500">customers</span>
                                 </div>
                             </div>
 
-                            <div className="h-64 md:h-72 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                            <div className="h-64 md:h-72 w-full bg-black rounded-lg border border-neutral-800 relative">
                                 <Chart
                                     data={scaleChartData}
                                     xFormatter={(val) => `${Math.round(val)} cust.`}
@@ -623,7 +623,7 @@ export default function SaaSPricingCalculator() {
                                         <Calendar size={20} />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-slate-800">12-Month Forecast</h3>
+                                        <h3 className="font-semibold text-slate-200">12-Month Forecast</h3>
                                         <p className="text-xs text-slate-400">Projected Run Rate (Dynamic Growth)</p>
                                     </div>
                                 </div>
@@ -632,7 +632,7 @@ export default function SaaSPricingCalculator() {
                                 </div>
                             </div>
 
-                            <div className="h-64 md:h-72 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                            <div className="h-64 md:h-72 w-full bg-black rounded-lg border border-neutral-800 relative">
                                 <Chart
                                     data={timeChartData}
                                     xFormatter={(val) => val === 0 ? 'Now' : `Mo ${val}`}
@@ -648,37 +648,37 @@ export default function SaaSPricingCalculator() {
                                     <Package size={48} />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-medium text-slate-500">Standard User</div>
-                                    <div className="text-2xl font-bold text-slate-800 mt-1">${basePrice.toFixed(0)}<span className="text-sm font-normal text-slate-400">/mo</span></div>
+                                    <div className="text-sm font-medium text-slate-400">Standard User</div>
+                                    <div className="text-2xl font-bold text-slate-200 mt-1">${basePrice.toFixed(0)}<span className="text-sm font-normal text-slate-500">/mo</span></div>
                                     <div className="text-xs text-slate-400 mt-1">
                                         <span className="font-semibold">{metrics.standardUserCount.toLocaleString()}</span> customers
                                     </div>
                                 </div>
-                                <div className="mt-4 pt-3 border-t border-slate-100">
+                                <div className="mt-4 pt-3 border-t border-neutral-800">
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs text-slate-500">Segment MRR</span>
-                                        <span className="text-sm font-bold text-slate-700">${metrics.totalRevenueFromStandard.toLocaleString()}</span>
+                                        <span className="text-sm font-bold text-slate-300">${metrics.totalRevenueFromStandard.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </Card>
 
                             {/* Expansion Plan Card */}
-                            <Card className="p-4 flex flex-col justify-between relative overflow-hidden border-indigo-200 bg-indigo-50/30">
+                            <Card className="p-4 flex flex-col justify-between relative overflow-hidden border-indigo-900/50 bg-indigo-900/10">
                                 <div className="absolute top-0 right-0 p-2 opacity-10 text-indigo-600">
                                     <Users size={48} />
                                 </div>
                                 <div>
                                     <div className="text-sm font-medium text-indigo-600">Expanded User</div>
-                                    <div className="text-2xl font-bold text-indigo-700 mt-1">${metrics.expandedUserRevenue.toFixed(0)}<span className="text-sm font-normal text-indigo-400">/mo</span></div>
+                                    <div className="text-2xl font-bold text-indigo-400 mt-1">${metrics.expandedUserRevenue.toFixed(0)}<span className="text-sm font-normal text-indigo-600">/mo</span></div>
                                     <div className="text-xs text-indigo-500 mt-1 flex gap-1">
                                         <span>${basePrice} base</span> + <span>${metrics.expansionCostOnly.toFixed(0)} seats</span>
                                     </div>
                                 </div>
 
-                                <div className="mt-4 pt-3 border-t border-indigo-200/50">
+                                <div className="mt-4 pt-3 border-t border-indigo-900/30">
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs text-indigo-600">Segment MRR</span>
-                                        <span className="text-sm font-bold text-indigo-700">${metrics.totalRevenueFromExpanded.toLocaleString()}</span>
+                                        <span className="text-sm font-bold text-indigo-400">${metrics.totalRevenueFromExpanded.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </Card>
@@ -689,77 +689,77 @@ export default function SaaSPricingCalculator() {
 
                             {/* Revenue Stack */}
                             <Card className="p-0 overflow-hidden h-full">
-                                <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-2">
+                                <div className="bg-neutral-900 p-4 border-b border-neutral-800 flex items-center gap-2">
                                     <BarChart3 size={18} className="text-slate-500" />
-                                    <h3 className="font-semibold text-slate-700 text-sm">Revenue Breakdown</h3>
+                                    <h3 className="font-semibold text-slate-300 text-sm">Revenue Breakdown</h3>
                                 </div>
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-neutral-800">
                                     <div className="p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="font-medium text-slate-800">Base Subscription</div>
+                                            <div className="font-medium text-slate-200">Base Subscription</div>
                                             <div className="text-xs text-slate-500">Fixed monthly fee</div>
                                         </div>
-                                        <div className="font-mono font-bold text-slate-700">${basePrice.toFixed(2)}</div>
+                                        <div className="font-mono font-bold text-slate-300">${basePrice.toFixed(2)}</div>
                                     </div>
 
                                     <div className="p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="font-medium text-slate-800">Expansion Revenue</div>
+                                            <div className="font-medium text-slate-200">Expansion Revenue</div>
                                             <div className="text-xs text-slate-500">
                                                 {expansionRate}% add ~{metrics.billableSeatsPerExpander} extra seats
                                             </div>
                                         </div>
-                                        <div className="font-mono font-bold text-emerald-600">+${metrics.seatRevenue.toFixed(2)}</div>
+                                        <div className="font-mono font-bold text-emerald-400">+${metrics.seatRevenue.toFixed(2)}</div>
                                     </div>
 
                                     <div className="p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="font-medium text-slate-800">Upsell Avg</div>
+                                            <div className="font-medium text-slate-200">Upsell Avg</div>
                                             <div className="text-xs text-slate-500">Weighted average</div>
                                         </div>
-                                        <div className="font-mono font-bold text-emerald-600">+${metrics.avgUpsellRevenue.toFixed(2)}</div>
+                                        <div className="font-mono font-bold text-emerald-400">+${metrics.avgUpsellRevenue.toFixed(2)}</div>
                                     </div>
 
-                                    <div className="p-4 bg-indigo-50 flex justify-between items-center">
-                                        <div><div className="font-bold text-indigo-900">Total ARPU</div></div>
-                                        <div className="font-mono font-bold text-indigo-700">${metrics.arpu.toFixed(2)}</div>
+                                    <div className="p-4 bg-indigo-900/20 flex justify-between items-center">
+                                        <div><div className="font-bold text-indigo-300">Total ARPU</div></div>
+                                        <div className="font-mono font-bold text-indigo-400">${metrics.arpu.toFixed(2)}</div>
                                     </div>
                                 </div>
                             </Card>
 
                             {/* Unit Economics Analysis */}
                             <Card className="p-0 overflow-hidden h-full">
-                                <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-2">
+                                <div className="bg-neutral-900 p-4 border-b border-neutral-800 flex items-center gap-2">
                                     <Activity size={18} className="text-slate-500" />
-                                    <h3 className="font-semibold text-slate-700 text-sm">Efficiency Analysis</h3>
+                                    <h3 className="font-semibold text-slate-300 text-sm">Efficiency Analysis</h3>
                                 </div>
                                 <div className="p-4 space-y-4">
-                                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800">
                                         <div className="flex justify-between mb-1">
                                             <span className="text-xs font-medium text-slate-500">Customer Lifetime (avg)</span>
-                                            <span className="text-xs font-bold text-slate-700">{(100 / churnRate).toFixed(1)} months</span>
+                                            <span className="text-xs font-bold text-slate-300">{(100 / churnRate).toFixed(1)} months</span>
                                         </div>
-                                        <div className="w-full bg-slate-200 rounded-full h-1.5">
+                                        <div className="w-full bg-neutral-700 rounded-full h-1.5">
                                             <div className="bg-indigo-400 h-1.5 rounded-full" style={{ width: `${Math.min(100, (100 / churnRate) * 2)}%` }}></div>
                                         </div>
                                     </div>
 
-                                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800">
                                         <div className="flex justify-between mb-1">
                                             <span className="text-xs font-medium text-slate-500">Real Profit per User</span>
-                                            <span className="text-xs font-bold text-emerald-600">${metrics.grossProfitPerUser.toFixed(0)} / month</span>
+                                            <span className="text-xs font-bold text-emerald-400">${metrics.grossProfitPerUser.toFixed(0)} / month</span>
                                         </div>
                                         <div className="text-xs text-slate-400 mt-1">
                                             After {100 - grossMargin}% margin costs.
                                         </div>
                                     </div>
 
-                                    <div className={`p-3 rounded-lg border ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                                    <div className={`p-3 rounded-lg border ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-900/20 border-emerald-800' : 'bg-amber-900/20 border-amber-800'}`}>
                                         <div className="flex items-center gap-2 mb-1">
                                             <div className={`w-2 h-2 rounded-full ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                                            <span className="text-xs font-bold uppercase text-slate-700">Verdict</span>
+                                            <span className="text-xs font-bold uppercase text-slate-300">Verdict</span>
                                         </div>
-                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                        <p className="text-xs text-slate-400 leading-relaxed">
                                             {metrics.ltvCacRatio >= 3
                                                 ? "Healthy economics. You are making >3x your spend on every customer. You can afford to spend more on ads."
                                                 : "Caution. Your LTV:CAC is low. Try lowering CAC, reducing churn, or increasing pricing to improve margins."}
