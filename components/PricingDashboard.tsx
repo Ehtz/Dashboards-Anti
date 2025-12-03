@@ -15,7 +15,8 @@ import {
     PieChart,
     Target,
     Calendar,
-    ArrowLeft
+    ArrowLeft,
+    AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,7 +26,7 @@ interface CardProps {
 }
 
 const Card = ({ children, className = "" }: CardProps) => (
-    <div className={`bg-neutral-900 rounded-xl border border-neutral-800 shadow-sm ${className}`}>
+    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}>
         {children}
     </div>
 );
@@ -42,9 +43,9 @@ const SectionHeader = ({ icon: Icon, title, description }: SectionHeaderProps) =
             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                 <Icon size={20} />
             </div>
-            <h3 className="font-semibold text-slate-200">{title}</h3>
+            <h3 className="font-semibold text-slate-800">{title}</h3>
         </div>
-        {description && <p className="text-sm text-slate-400 ml-11">{description}</p>}
+        {description && <p className="text-sm text-slate-500 ml-11">{description}</p>}
     </div>
 );
 
@@ -65,7 +66,7 @@ interface InputGroupProps {
 const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0, max = 1000, step = 1, helpText, caption, className = "" }: InputGroupProps) => (
     <div className={`mb-4 ${className}`}>
         <div className="flex justify-between mb-1.5">
-            <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
                 {label}
                 {helpText && (
                     <div className="group relative cursor-help">
@@ -76,7 +77,7 @@ const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0,
                     </div>
                 )}
             </label>
-            <span className="text-sm font-bold text-indigo-400 font-mono">
+            <span className="text-sm font-bold text-indigo-600 font-mono">
                 {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
             </span>
         </div>
@@ -88,11 +89,11 @@ const InputGroup = ({ label, value, onChange, prefix = "", suffix = "", min = 0,
                 step={step}
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="absolute w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="absolute w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:accent-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
             />
         </div>
         {caption && (
-            <div className="text-xs text-rose-500 text-right font-medium mt-1">
+            <div className="text-xs text-slate-500 text-right font-medium mt-1">
                 {caption}
             </div>
         )}
@@ -108,8 +109,8 @@ interface StatCardProps {
 }
 
 const StatCard = ({ label, value, subtext, highlight = false, alert = false }: StatCardProps) => (
-    <div className={`p-4 rounded-xl border ${highlight ? 'bg-indigo-900/50 border-indigo-700 text-white' : alert ? 'bg-amber-900/20 border-amber-800' : 'bg-neutral-900 border-neutral-800'}`}>
-        <div className={`text-sm font-medium mb-1 ${highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{label}</div>
+    <div className={`p-4 rounded-xl border ${highlight ? 'bg-indigo-600 border-indigo-600 text-white' : alert ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
+        <div className={`text-sm font-medium mb-1 ${highlight ? 'text-indigo-100' : 'text-slate-500'}`}>{label}</div>
         <div className={`text-2xl font-bold font-mono tracking-tight ${alert ? 'text-amber-700' : ''}`}>{value}</div>
         {subtext && <div className={`text-xs mt-1 ${highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{subtext}</div>}
     </div>
@@ -131,7 +132,8 @@ export default function SaaSPricingCalculator() {
     const [expansionRate, setExpansionRate] = useState(30); // % of customers who expand
     const [avgSeatsPerAccount, setAvgSeatsPerAccount] = useState(5); // Now represents "Avg Seats per Expanded Account"
     const [totalCustomers, setTotalCustomers] = useState(100);
-    const [growthRate, setGrowthRate] = useState(5); // Monthly Growth Rate %
+    const [yearlyGrowthRate, setYearlyGrowthRate] = useState(60); // Yearly Growth Rate %
+    const [monthlyNewCustomers, setMonthlyNewCustomers] = useState(5); // Linear growth component
 
     // Unit Economics (The "Add them" metrics)
     const [churnRate, setChurnRate] = useState(5); // Monthly churn %
@@ -238,26 +240,120 @@ export default function SaaSPricingCalculator() {
     }, [metrics.arpu, totalCustomers, chartMode, grossMargin]);
 
     // Data for "Time" chart (Revenue vs Months)
-    // Logic: Current Customers * (1 + GrowthRate)^Month
+    // Logic: Start from 0 (or current) and apply growth
     const timeChartData = useMemo(() => {
         const points = [];
         const months = 12;
+        let currentCust = totalCustomers; // Start from current
+        // If user wants to see "from 0", they can set totalCustomers to 0.
+
+        // Monthly Growth Rate derived from Yearly
+        const monthlyGrowthRate = Math.pow(1 + yearlyGrowthRate / 100, 1 / 12) - 1;
 
         for (let i = 0; i <= months; i++) {
-            const projectedCustomers = totalCustomers * Math.pow(1 + growthRate / 100, i);
-            const revenue = projectedCustomers * metrics.arpu;
+            const revenue = currentCust * metrics.arpu;
             const profit = revenue * (grossMargin / 100);
 
             points.push({
                 x: i,
                 y: chartMode === 'revenue' ? revenue : profit
             });
-        }
-        const maxY = points[points.length - 1].y;
-        // Increase maxY slightly so the line isn't at the very top pixel
-        return { points, maxX: months, maxY: maxY > 0 ? maxY * 1.2 : 100, type: 'time' };
-    }, [metrics.arpu, totalCustomers, chartMode, grossMargin, growthRate]);
 
+            // Compound Growth + Linear Growth
+            currentCust = currentCust * (1 + monthlyGrowthRate) + monthlyNewCustomers;
+        }
+
+        const maxY = points[points.length - 1].y;
+        return { points, maxX: months, maxY: maxY > 0 ? maxY * 1.2 : 100, type: 'time' };
+    }, [metrics.arpu, totalCustomers, chartMode, grossMargin, yearlyGrowthRate, monthlyNewCustomers]);
+
+    // --- Whale Curve Data Generation ---
+    const whaleData = useMemo(() => {
+        const N = 1000;
+
+        // 1. Generate Segments
+        // We need to construct a dataset where:
+        // - Whales (50): High Profit
+        // - High Perf (100): Med Profit
+        // - Long Tail (750): Low Profit (Steady Margin)
+        // - Unprofitable (100): Negative Profit (Drag)
+
+        // Target Totals (Arbitrary units, we will normalize)
+        // Let's say Total Final Profit = 1000 units.
+        // Peak Profit = 1250 units (125%).
+        // Unprofitable Drag = -250 units.
+
+        // Distribution of Positive Profit (1250 units):
+        // Whales (50): 20% of Total Final (200 units) -> 4 units/cust
+        // High Perf (100): 40% of Total Final (400 units) -> 4 units/cust (Wait, user said "Top ~15% account for ~60%". 50+100=150 (15%). 200+400=600 (60%). Matches.)
+        // Long Tail (750): Remaining to reach 1250. 1250 - 600 = 650 units. -> 0.86 units/cust.
+
+        // Unprofitable (100): -250 units -> -2.5 units/cust.
+
+        const customers = [];
+
+        // Whales
+        for (let i = 0; i < 50; i++) {
+            const profit = 4 + (Math.random() * 0.5); // Add noise
+            const margin = 0.90; // High margin
+            const revenue = profit / margin;
+            customers.push({ profit, revenue, margin });
+        }
+
+        // High Performers
+        for (let i = 0; i < 100; i++) {
+            const profit = 4 + (Math.random() * 0.5); // Similar profit to whales but maybe lower margin/higher rev? 
+            // Actually user said "Whales: High Rev, Low Cost". "High Perf: Good Rev, Low Cost".
+            // Let's make Whales slightly better.
+            // Adjusted: Whales Profit = 5, High Perf Profit = 3.5.
+            // 50 * 5 = 250. 100 * 3.5 = 350. Total = 600. Perfect.
+            const margin = 0.85;
+            const revenue = profit / margin;
+            customers.push({ profit, revenue, margin });
+        }
+
+        // Long Tail
+        for (let i = 0; i < 750; i++) {
+            // Total target: 650. 650 / 750 = 0.86
+            const profit = 0.86 + (Math.random() * 0.1);
+            const margin = 0.80; // "Steady 80% Profit Margin"
+            const revenue = profit / margin;
+            customers.push({ profit, revenue, margin });
+        }
+
+        // Unprofitable Tail
+        for (let i = 0; i < 100; i++) {
+            // Target: -250. -250 / 100 = -2.5
+            const profit = -2.5 + (Math.random() * 0.5);
+            // "Medium Revenue, EXTREMELY High Cost"
+            // Rev = 2 (Medium), Cost = 4.5 -> Profit = -2.5
+            const revenue = 2 + (Math.random() * 0.5);
+            // Margin = Profit / Revenue (Negative)
+            const margin = profit / revenue;
+            customers.push({ profit, revenue, margin });
+        }
+
+        // 2. Sort by Profit Descending
+        customers.sort((a, b) => b.profit - a.profit);
+
+        // 3. Calculate Cumulative
+        let cumProfit = 0;
+        let cumRev = 0;
+        const totalNetProfit = customers.reduce((sum, c) => sum + c.profit, 0);
+
+        const points = customers.map((c, i) => {
+            cumProfit += c.profit;
+            cumRev += c.revenue;
+
+            return {
+                x: ((i + 1) / N) * 100, // Percentile
+                profitPct: (cumProfit / totalNetProfit) * 100,
+                marginPct: (cumProfit / cumRev) * 100
+            };
+        });
+
+        return { points, maxProfitPct: Math.max(...points.map(p => p.profitPct)) };
+    }, []); // Static synthetic data
 
     // --- SVG Chart Helpers ---
 
@@ -272,8 +368,6 @@ export default function SaaSPricingCalculator() {
         const chartH = height - padding * 2;
 
         const scaleX = (val: number) => (val / data.maxX) * chartW + padding;
-        // For flat line charts, we want a fixed range or dynamic? 
-        // Using dynamic maxY from data ensures it fits.
         const scaleY = (val: number) => height - padding - (val / data.maxY) * chartH;
 
         const pathD = data.points.map((p, i) =>
@@ -284,13 +378,11 @@ export default function SaaSPricingCalculator() {
 
         const lineColor = chartMode === 'revenue' ? '#4f46e5' : '#10b981';
 
-        // Generate ticks based on chart type
         const ticks = data.type === 'time' ? [0, 3, 6, 9, 12] : [0, 0.5, 1];
 
         return (
             <div className="w-full h-full overflow-hidden">
                 <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
-                    {/* Y-Axis Grid & Labels */}
                     {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
                         <g key={tick}>
                             <line
@@ -298,7 +390,7 @@ export default function SaaSPricingCalculator() {
                                 y1={scaleY(data.maxY * tick)}
                                 x2={width - padding}
                                 y2={scaleY(data.maxY * tick)}
-                                stroke="#404040"
+                                stroke="#e2e8f0"
                                 strokeDasharray="4 4"
                             />
                             <text
@@ -311,7 +403,6 @@ export default function SaaSPricingCalculator() {
                             </text>
                         </g>
                     ))}
-
                     <defs>
                         <linearGradient id="gradientRevenue" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.2" />
@@ -322,11 +413,8 @@ export default function SaaSPricingCalculator() {
                             <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                         </linearGradient>
                     </defs>
-
                     <path d={areaD} fill={`url(#gradient${chartMode === 'revenue' ? 'Revenue' : 'Profit'})`} />
                     <path d={pathD} fill="none" stroke={lineColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-
-                    {/* Active Marker (Current State) */}
                     {data.type === 'scale' && (
                         <circle
                             cx={scaleX(totalCustomers)}
@@ -335,8 +423,6 @@ export default function SaaSPricingCalculator() {
                             className={`${chartMode === 'revenue' ? 'fill-indigo-600' : 'fill-emerald-500'} stroke-white stroke-2`}
                         />
                     )}
-
-                    {/* End Marker (For Time Chart) */}
                     {data.type === 'time' && (
                         <circle
                             cx={scaleX(data.maxX)}
@@ -345,8 +431,6 @@ export default function SaaSPricingCalculator() {
                             className={`${chartMode === 'revenue' ? 'fill-indigo-600' : 'fill-emerald-500'} stroke-white stroke-2`}
                         />
                     )}
-
-                    {/* X-Axis Labels */}
                     {ticks.map((tick) => {
                         const val = data.type === 'time' ? tick : data.maxX * tick;
                         return (
@@ -366,25 +450,85 @@ export default function SaaSPricingCalculator() {
         );
     };
 
+    const WhaleChart = ({ data, type }: { data: { x: number; profitPct: number; marginPct: number }[]; type: 'profit' | 'margin' }) => {
+        const height = 240;
+        const padding = 40;
+        const width = 600;
+        const chartW = width - padding * 2;
+        const chartH = height - padding * 2;
+
+        // Scales
+        const scaleX = (val: number) => (val / 100) * chartW + padding;
+
+        // Y Scale depends on type
+        // Profit: Min 0 (or neg?), Max ~130%
+        // Margin: 0 to 100%
+        const maxY = type === 'profit' ? 140 : 100;
+        const minY = type === 'profit' ? 0 : 0;
+        const scaleY = (val: number) => height - padding - ((val - minY) / (maxY - minY)) * chartH;
+
+        const pathD = data.map((p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(type === 'profit' ? p.profitPct : p.marginPct)}`
+        ).join(' ');
+
+        const areaD = `${pathD} L ${scaleX(100)} ${height - padding} L ${padding} ${height - padding} Z`;
+
+        return (
+            <div className="w-full h-full overflow-hidden">
+                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+                    {/* Grid */}
+                    {[0, 0.25, 0.5, 0.75, 1].map(tick => (
+                        <line key={tick} x1={padding} y1={scaleY(maxY * tick)} x2={width - padding} y2={scaleY(maxY * tick)} stroke="#e2e8f0" strokeDasharray="4 4" />
+                    ))}
+
+                    {/* Reference Lines */}
+                    {type === 'profit' && (
+                        <line x1={padding} y1={scaleY(100)} x2={width - padding} y2={scaleY(100)} stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+                    )}
+                    {type === 'margin' && (
+                        <line x1={padding} y1={scaleY(80)} x2={width - padding} y2={scaleY(80)} stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+                    )}
+
+                    <defs>
+                        <linearGradient id="whaleGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                        </linearGradient>
+                        <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+
+                    <path d={areaD} fill={`url(#${type === 'profit' ? 'whaleGradient' : 'marginGradient'})`} />
+                    <path d={pathD} fill="none" stroke={type === 'profit' ? '#8b5cf6' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+                    {/* Labels */}
+                    <text x={padding - 10} y={scaleY(maxY)} textAnchor="end" className="text-[10px] fill-slate-400 font-mono">{maxY}%</text>
+                    <text x={padding - 10} y={scaleY(0)} textAnchor="end" className="text-[10px] fill-slate-400 font-mono">0%</text>
+
+                    <text x={width / 2} y={height - 10} textAnchor="middle" className="text-[10px] fill-slate-400 font-mono">Customer Percentile (Top to Bottom)</text>
+                </svg>
+            </div>
+        )
+    }
+
     return (
-        <div className="min-h-screen bg-black p-4 md:p-8 font-sans text-slate-200">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+            <div className="max-w-7xl mx-auto">
 
                 {/* Header */}
                 <header className="mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-400 mb-4 transition-colors font-medium">
+                    <Link href="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 mb-4 transition-colors font-medium">
                         <ArrowLeft size={16} />
                         Back to Dashboard
                     </Link>
-                    <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
                         <div className="bg-indigo-600 p-2 rounded-lg text-white">
                             <Calculator size={24} />
                         </div>
                         SaaS Revenue Simulator
                     </h1>
-                    <p className="text-slate-400 mt-2 text-lg">
-                        Model your pricing strategy, unit economics, and earnings potential.
-                    </p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -392,7 +536,7 @@ export default function SaaSPricingCalculator() {
                     {/* LEFT COLUMN: Controls */}
                     <div className="lg:col-span-4 space-y-6">
 
-                        {/* Customer Scale (New) */}
+                        {/* Customer Scale */}
                         <Card className="p-6">
                             <SectionHeader
                                 icon={Target}
@@ -406,18 +550,27 @@ export default function SaaSPricingCalculator() {
                                 min={0} max={5000} step={10}
                                 helpText="Number of active paying accounts."
                             />
-                            <InputGroup
-                                label="Monthly Growth Rate"
-                                value={growthRate}
-                                onChange={setGrowthRate}
-                                min={0} max={30} suffix="%"
-                                helpText="Expected month-over-month customer growth."
-                                caption={`+${Math.round(totalCustomers * (Math.pow(1 + growthRate / 100, 12) - 1))} new cust. in 1 yr`}
-                            />
+                            <div className="pt-4 border-t border-slate-100">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Growth Assumptions</p>
+                                <InputGroup
+                                    label="Yearly Growth Rate"
+                                    value={yearlyGrowthRate}
+                                    onChange={setYearlyGrowthRate}
+                                    min={0} max={200} suffix="%"
+                                    helpText="Expected year-over-year growth."
+                                />
+                                <InputGroup
+                                    label="New Cust. / Month"
+                                    value={monthlyNewCustomers}
+                                    onChange={setMonthlyNewCustomers}
+                                    min={0} max={100}
+                                    helpText="Linear growth (net new adds)."
+                                />
+                            </div>
                         </Card>
 
                         {/* Unit Economics Controls */}
-                        <Card className="p-6 border-l-4 border-l-emerald-600">
+                        <Card className="p-6 border-l-4 border-l-emerald-500">
                             <SectionHeader
                                 icon={Scale}
                                 title="Unit Economics"
@@ -432,7 +585,6 @@ export default function SaaSPricingCalculator() {
                                 caption={
                                     <span>
                                         -{metrics.churnedMRR.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} /mo
-                                        <span className="opacity-75"> ({metrics.churnedARR.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} /yr)</span>
                                     </span>
                                 }
                             />
@@ -487,7 +639,6 @@ export default function SaaSPricingCalculator() {
                                 onChange={setExpansionRate}
                                 min={0} max={100} suffix="%"
                                 helpText="Percentage of customers who add extra seats."
-                                caption={`${100 - expansionRate}% stay on base plan`}
                             />
                             <InputGroup
                                 label="Price Per Extra Seat"
@@ -496,16 +647,13 @@ export default function SaaSPricingCalculator() {
                                 min={0} max={100} prefix="$"
                                 helpText="Cost for each user beyond the included amount."
                             />
-                            <div className="pt-4 border-t border-slate-100">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Model Assumptions</p>
-                                <InputGroup
-                                    label="Avg. Seats (Exp. Users)"
-                                    value={avgSeatsPerAccount}
-                                    onChange={setAvgSeatsPerAccount}
-                                    min={1} max={50}
-                                    helpText="Average team size for customers who expand."
-                                />
-                            </div>
+                            <InputGroup
+                                label="Avg. Seats (Exp. Users)"
+                                value={avgSeatsPerAccount}
+                                onChange={setAvgSeatsPerAccount}
+                                min={1} max={50}
+                                helpText="Average team size for customers who expand."
+                            />
                         </Card>
 
                         {/* Upsells */}
@@ -566,209 +714,167 @@ export default function SaaSPricingCalculator() {
                             />
                         </div>
 
-                        {/* CHART 1: Scale Projection */}
-                        <Card className="p-6 overflow-hidden">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                                        <TrendingUp size={20} />
+                        {/* Projections Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* CHART 1: Scale Projection */}
+                            <Card className="p-6 overflow-hidden">
+                                <div className="flex flex-col justify-between mb-6 gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                                            <TrendingUp size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-800">Scaling Projection</h3>
+                                            <p className="text-xs text-slate-400">Revenue vs. Customer Count</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-200">Scaling Projection</h3>
-                                        <p className="text-xs text-slate-400">Revenue vs. Customer Count</p>
-                                    </div>
-
-                                    {/* Chart Toggle */}
-                                    <div className="flex bg-neutral-800 p-1 rounded-lg ml-4">
+                                    <div className="flex bg-slate-100 p-1 rounded-lg self-start">
                                         <button
                                             onClick={() => setChartMode('revenue')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'revenue' ? 'bg-neutral-700 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'revenue' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                         >
                                             Revenue
                                         </button>
                                         <button
                                             onClick={() => setChartMode('profit')}
-                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'profit' ? 'bg-neutral-700 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}
+                                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartMode === 'profit' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                         >
                                             Gross Profit
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 bg-neutral-800 px-3 py-1.5 rounded-full self-start md:self-auto">
-                                    <span className="text-xs font-medium text-slate-500">Current Scale:</span>
-                                    <input
-                                        type="number"
-                                        value={totalCustomers}
-                                        onChange={(e) => setTotalCustomers(Number(e.target.value))}
-                                        className="w-16 bg-transparent text-sm font-bold text-slate-200 focus:outline-none border-b border-neutral-600 focus:border-indigo-500 text-right"
+                                <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                    <Chart
+                                        data={scaleChartData}
+                                        height={192}
+                                        xFormatter={(val) => `${Math.round(val)}`}
                                     />
-                                    <span className="text-xs text-slate-500">customers</span>
-                                </div>
-                            </div>
-
-                            <div className="h-64 md:h-72 w-full bg-black rounded-lg border border-neutral-800 relative">
-                                <Chart
-                                    data={scaleChartData}
-                                    xFormatter={(val) => `${Math.round(val)} cust.`}
-                                />
-                            </div>
-                        </Card>
-
-                        {/* CHART 2: Time Projection (Modified - With Growth Rate) */}
-                        <Card className="p-6 overflow-hidden">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                        <Calendar size={20} />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-200">12-Month Forecast</h3>
-                                        <p className="text-xs text-slate-400">Projected Run Rate (Dynamic Growth)</p>
-                                    </div>
-                                </div>
-                                <div className="text-xs text-slate-400 italic">
-                                    Based on {growthRate}% monthly customer growth
-                                </div>
-                            </div>
-
-                            <div className="h-64 md:h-72 w-full bg-black rounded-lg border border-neutral-800 relative">
-                                <Chart
-                                    data={timeChartData}
-                                    xFormatter={(val) => val === 0 ? 'Now' : `Mo ${val}`}
-                                />
-                            </div>
-                        </Card>
-
-                        {/* Customer Profile Comparison */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* Standard Plan Card */}
-                            <Card className="p-4 flex flex-col justify-between relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-2 opacity-10">
-                                    <Package size={48} />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-medium text-slate-400">Standard User</div>
-                                    <div className="text-2xl font-bold text-slate-200 mt-1">${basePrice.toFixed(0)}<span className="text-sm font-normal text-slate-500">/mo</span></div>
-                                    <div className="text-xs text-slate-400 mt-1">
-                                        <span className="font-semibold">{metrics.standardUserCount.toLocaleString()}</span> customers
-                                    </div>
-                                </div>
-                                <div className="mt-4 pt-3 border-t border-neutral-800">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-xs text-slate-500">Segment MRR</span>
-                                        <span className="text-sm font-bold text-slate-300">${metrics.totalRevenueFromStandard.toLocaleString()}</span>
-                                    </div>
                                 </div>
                             </Card>
 
-                            {/* Expansion Plan Card */}
-                            <Card className="p-4 flex flex-col justify-between relative overflow-hidden border-indigo-900/50 bg-indigo-900/10">
-                                <div className="absolute top-0 right-0 p-2 opacity-10 text-indigo-600">
-                                    <Users size={48} />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-medium text-indigo-600">Expanded User</div>
-                                    <div className="text-2xl font-bold text-indigo-400 mt-1">${metrics.expandedUserRevenue.toFixed(0)}<span className="text-sm font-normal text-indigo-600">/mo</span></div>
-                                    <div className="text-xs text-indigo-500 mt-1 flex gap-1">
-                                        <span>${basePrice} base</span> + <span>${metrics.expansionCostOnly.toFixed(0)} seats</span>
+                            {/* CHART 2: Time Projection */}
+                            <Card className="p-6 overflow-hidden">
+                                <div className="flex flex-col justify-between mb-6 gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                            <Calendar size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-800">12-Month Forecast</h3>
+                                            <p className="text-xs text-slate-400">Based on {yearlyGrowthRate}% YoY Growth</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-4 pt-3 border-t border-indigo-900/30">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-xs text-indigo-600">Segment MRR</span>
-                                        <span className="text-sm font-bold text-indigo-400">${metrics.totalRevenueFromExpanded.toLocaleString()}</span>
-                                    </div>
+                                <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                    <Chart
+                                        data={timeChartData}
+                                        height={192}
+                                        xFormatter={(val) => val === 0 ? 'Now' : `Mo ${val}`}
+                                    />
                                 </div>
                             </Card>
                         </div>
 
-                        {/* Detailed Breakdown */}
+                        {/* PROFIT WHALE CURVE SECTION */}
+                        <div className="pt-6 border-t border-slate-200">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
+                                    <PieChart size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-800">Profitability Analysis</h2>
+                                    <p className="text-sm text-slate-500">Customer Concentration & Whale Curve</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Whale Curve */}
+                                <Card className="p-6">
+                                    <div className="mb-4">
+                                        <h3 className="font-semibold text-slate-800">The "Whale Curve"</h3>
+                                        <p className="text-xs text-slate-400">Cumulative Profit % by Customer Percentile</p>
+                                    </div>
+                                    <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                        <WhaleChart data={whaleData.points} type="profit" />
+                                    </div>
+                                    <div className="mt-4 text-xs text-slate-500 flex gap-4">
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                                            <span>Peak: {Math.round(whaleData.maxProfitPct)}% of Profit</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                                            <span>Bottom 10% destroy value</span>
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                {/* Gross Margin Curve */}
+                                <Card className="p-6">
+                                    <div className="mb-4">
+                                        <h3 className="font-semibold text-slate-800">Gross Margin Curve</h3>
+                                        <p className="text-xs text-slate-400">Cumulative Margin % by Customer Percentile</p>
+                                    </div>
+                                    <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                        <WhaleChart data={whaleData.points} type="margin" />
+                                    </div>
+                                    <div className="mt-4 text-xs text-slate-500">
+                                        <p>Targeting ~80% margin until the unprofitable tail drags it down.</p>
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
+
+                        {/* Detailed Breakdown (Compact) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                            {/* Revenue Stack */}
                             <Card className="p-0 overflow-hidden h-full">
-                                <div className="bg-neutral-900 p-4 border-b border-neutral-800 flex items-center gap-2">
-                                    <BarChart3 size={18} className="text-slate-500" />
-                                    <h3 className="font-semibold text-slate-300 text-sm">Revenue Breakdown</h3>
+                                <div className="bg-slate-50 p-3 border-b border-slate-200 flex items-center gap-2">
+                                    <BarChart3 size={16} className="text-slate-500" />
+                                    <h3 className="font-semibold text-slate-700 text-sm">Revenue Breakdown</h3>
                                 </div>
-                                <div className="divide-y divide-neutral-800">
-                                    <div className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <div className="font-medium text-slate-200">Base Subscription</div>
-                                            <div className="text-xs text-slate-500">Fixed monthly fee</div>
-                                        </div>
-                                        <div className="font-mono font-bold text-slate-300">${basePrice.toFixed(2)}</div>
+                                <div className="divide-y divide-slate-100 text-sm">
+                                    <div className="p-3 flex justify-between items-center">
+                                        <span className="text-slate-600">Base Subscription</span>
+                                        <span className="font-mono font-bold text-slate-700">${basePrice.toFixed(2)}</span>
                                     </div>
-
-                                    <div className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <div className="font-medium text-slate-200">Expansion Revenue</div>
-                                            <div className="text-xs text-slate-500">
-                                                {expansionRate}% add ~{metrics.billableSeatsPerExpander} extra seats
-                                            </div>
-                                        </div>
-                                        <div className="font-mono font-bold text-emerald-400">+${metrics.seatRevenue.toFixed(2)}</div>
+                                    <div className="p-3 flex justify-between items-center">
+                                        <span className="text-slate-600">Expansion (Seats)</span>
+                                        <span className="font-mono font-bold text-emerald-600">+${metrics.seatRevenue.toFixed(2)}</span>
                                     </div>
-
-                                    <div className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <div className="font-medium text-slate-200">Upsell Avg</div>
-                                            <div className="text-xs text-slate-500">Weighted average</div>
-                                        </div>
-                                        <div className="font-mono font-bold text-emerald-400">+${metrics.avgUpsellRevenue.toFixed(2)}</div>
+                                    <div className="p-3 flex justify-between items-center">
+                                        <span className="text-slate-600">Upsell Avg</span>
+                                        <span className="font-mono font-bold text-emerald-600">+${metrics.avgUpsellRevenue.toFixed(2)}</span>
                                     </div>
-
-                                    <div className="p-4 bg-indigo-900/20 flex justify-between items-center">
-                                        <div><div className="font-bold text-indigo-300">Total ARPU</div></div>
-                                        <div className="font-mono font-bold text-indigo-400">${metrics.arpu.toFixed(2)}</div>
+                                    <div className="p-3 bg-indigo-50 flex justify-between items-center">
+                                        <span className="font-bold text-indigo-900">Total ARPU</span>
+                                        <span className="font-mono font-bold text-indigo-700">${metrics.arpu.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </Card>
 
-                            {/* Unit Economics Analysis */}
                             <Card className="p-0 overflow-hidden h-full">
-                                <div className="bg-neutral-900 p-4 border-b border-neutral-800 flex items-center gap-2">
-                                    <Activity size={18} className="text-slate-500" />
-                                    <h3 className="font-semibold text-slate-300 text-sm">Efficiency Analysis</h3>
+                                <div className="bg-slate-50 p-3 border-b border-slate-200 flex items-center gap-2">
+                                    <Activity size={16} className="text-slate-500" />
+                                    <h3 className="font-semibold text-slate-700 text-sm">Efficiency Analysis</h3>
                                 </div>
-                                <div className="p-4 space-y-4">
-                                    <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800">
-                                        <div className="flex justify-between mb-1">
-                                            <span className="text-xs font-medium text-slate-500">Customer Lifetime (avg)</span>
-                                            <span className="text-xs font-bold text-slate-300">{(100 / churnRate).toFixed(1)} months</span>
-                                        </div>
-                                        <div className="w-full bg-neutral-700 rounded-full h-1.5">
-                                            <div className="bg-indigo-400 h-1.5 rounded-full" style={{ width: `${Math.min(100, (100 / churnRate) * 2)}%` }}></div>
-                                        </div>
+                                <div className="p-3 space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-600">Real Profit / User</span>
+                                        <span className="font-bold text-emerald-600">${metrics.grossProfitPerUser.toFixed(0)} / mo</span>
                                     </div>
-
-                                    <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800">
-                                        <div className="flex justify-between mb-1">
-                                            <span className="text-xs font-medium text-slate-500">Real Profit per User</span>
-                                            <span className="text-xs font-bold text-emerald-400">${metrics.grossProfitPerUser.toFixed(0)} / month</span>
-                                        </div>
-                                        <div className="text-xs text-slate-400 mt-1">
-                                            After {100 - grossMargin}% margin costs.
-                                        </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-600">Customer Lifetime</span>
+                                        <span className="font-bold text-slate-700">{(100 / churnRate).toFixed(1)} mo</span>
                                     </div>
-
-                                    <div className={`p-3 rounded-lg border ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-900/20 border-emerald-800' : 'bg-amber-900/20 border-amber-800'}`}>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div className={`w-2 h-2 rounded-full ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                                            <span className="text-xs font-bold uppercase text-slate-300">Verdict</span>
-                                        </div>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
-                                            {metrics.ltvCacRatio >= 3
-                                                ? "Healthy economics. You are making >3x your spend on every customer. You can afford to spend more on ads."
-                                                : "Caution. Your LTV:CAC is low. Try lowering CAC, reducing churn, or increasing pricing to improve margins."}
-                                        </p>
+                                    <div className={`p-2 rounded border text-xs ${metrics.ltvCacRatio >= 3 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+                                        {metrics.ltvCacRatio >= 3
+                                            ? "Healthy LTV:CAC (>3x). Scale spend."
+                                            : "Low LTV:CAC. Improve retention or pricing."}
                                     </div>
-
                                 </div>
                             </Card>
-
                         </div>
 
                     </div>
