@@ -28,7 +28,8 @@ const MATRICES = [
         lowLow: 'Cash Burner',
         lowHigh: 'Niche Profitable',
         highLow: 'High Churn Risk',
-        highHigh: 'Cash Cow'
+        highHigh: 'Cash Cow',
+        xStart: '0d', xEnd: '365d', yStart: '0%', yEnd: '100%'
     },
     {
         id: 'gross-margin',
@@ -42,35 +43,38 @@ const MATRICES = [
         lowLow: 'Commodity',
         lowHigh: 'Premium Service',
         highLow: 'Volume Play',
-        highHigh: 'SaaS Unicorn'
+        highHigh: 'SaaS Unicorn',
+        xStart: '0d', xEnd: '365d', yStart: '0%', yEnd: '100%'
     },
     {
         id: 'freq-arpu',
         group: MATRIX_GROUPS.FINANCIALS,
-        title: 'Revenue Habit',
+        title: 'Freq Use/ARPU (1Year)',
         xAxis: 'Avg Use Frequency',
-        yAxis: 'ARPU',
+        yAxis: 'ARPU (1yr)',
         xKey: 'frequency',
         yKey: 'arpu',
         icon: Activity,
         lowLow: 'Low Value',
         lowHigh: 'Enterprise (One-off)',
         highLow: 'Ad/Micro-trans',
-        highHigh: 'Recurring Enterprise'
+        highHigh: 'Recurring Enterprise',
+        xStart: '0d', xEnd: '365d', yStart: '$1', yEnd: '$1M (Log)'
     },
     {
         id: 'freq-ltv',
         group: MATRIX_GROUPS.FINANCIALS,
-        title: 'Long Term Value',
+        title: 'Freq Use/ARPU (5Years)',
         xAxis: 'Avg Use Frequency',
-        yAxis: 'LTV (5yr)',
+        yAxis: 'ARPU (5yr)',
         xKey: 'frequency',
         yKey: 'ltv',
         icon: TrendingUp,
         lowLow: 'Churn Factory',
         lowHigh: 'Consulting Model',
         highLow: 'Utility Subscription',
-        highHigh: 'Compounder'
+        highHigh: 'Compounder',
+        xStart: '0d', xEnd: '365d', yStart: '$100', yEnd: '$10M (Log)'
     },
 
     // --- Row 2: Market Segments ---
@@ -86,7 +90,8 @@ const MATRICES = [
         lowLow: 'Niche Hobby',
         lowHigh: 'Boutique Luxury',
         highLow: 'Mass Market',
-        highHigh: 'Platform Giant'
+        highHigh: 'Platform Giant',
+        xStart: '$10M', xEnd: '$100B', yStart: '$1', yEnd: '$1M'
     },
     {
         id: 'sam-arpu',
@@ -100,7 +105,8 @@ const MATRICES = [
         lowLow: 'Local Player',
         lowHigh: 'Specialized High-End',
         highLow: 'Regional Vol',
-        highHigh: 'Market Leader'
+        highHigh: 'Market Leader',
+        xStart: '$1M', xEnd: '$10B', yStart: '$1', yEnd: '$1M'
     },
     {
         id: 'som-arpu',
@@ -114,7 +120,8 @@ const MATRICES = [
         lowLow: 'Struggling',
         lowHigh: 'Profitable Niche',
         highLow: 'Commodity Winner',
-        highHigh: 'Monopoly'
+        highHigh: 'Monopoly',
+        xStart: '$100k', xEnd: '$1B', yStart: '$1', yEnd: '$1M'
     },
     {
         id: 'ltv-cac',
@@ -128,7 +135,8 @@ const MATRICES = [
         lowLow: 'The Graveyard',
         lowHigh: 'Organic/Viral',
         highLow: 'Venture Burn',
-        highHigh: 'Enterprise Scale'
+        highHigh: 'Enterprise Scale',
+        xStart: '$0', xEnd: '$50k (CAC)', yStart: '$100', yEnd: '$1M (LTV)'
     },
 
     // --- Row 3: Product & UX ---
@@ -144,21 +152,23 @@ const MATRICES = [
         lowLow: 'Doomed',
         lowHigh: 'Legacy Bank',
         highLow: 'Move Fast Break Things',
-        highHigh: 'High Performer'
+        highHigh: 'High Performer',
+        xStart: 'Monthly', xEnd: 'Daily', yStart: 'Buggy', yEnd: 'Perfect'
     },
     {
         id: 'virality',
         group: MATRIX_GROUPS.PRODUCT,
-        title: 'Advocacy Potential',
+        title: 'Advocacy NPS Potential',
         xAxis: 'Avg Use Frequency',
-        yAxis: 'Share Opportunities',
+        yAxis: 'Number of avg opportunities to share prod (0-100)',
         xKey: 'frequency',
         yKey: 'shareOpp',
         icon: Users,
         lowLow: 'Secret Tool',
         lowHigh: 'Referral Driven',
         highLow: 'Habitual',
-        highHigh: 'Social/Viral'
+        highHigh: 'Social/Viral',
+        xStart: '0d', xEnd: '365d', yStart: '0', yEnd: '100'
     },
     {
         id: 'cognitive',
@@ -172,35 +182,38 @@ const MATRICES = [
         lowLow: 'Cheap & Simple',
         lowHigh: 'Enterprise Complex',
         highLow: 'Consumer App',
-        highHigh: 'Invisible Tech'
+        highHigh: 'Invisible Tech',
+        xStart: 'Simple', xEnd: 'Complex', yStart: '$1', yEnd: '$1M'
     },
     {
         id: 'pmf',
         group: MATRIX_GROUPS.PRODUCT,
         title: 'Product Market Fit',
         xAxis: 'Market Size Potential',
-        yAxis: 'CSAT / Retention',
+        yAxis: 'Customer Satisafction / Retention',
         xKey: 'marketSize',
-        yKey: 'csat',
+        yKey: 'nps',
         icon: Check,
         lowLow: 'Pivot Needed',
         lowHigh: 'Cult Product',
         highLow: 'Leaky Bucket',
-        highHigh: 'Scale Ready'
+        highHigh: 'Scale Ready',
+        xStart: 'Niche', xEnd: 'Mass', yStart: 'Low', yEnd: 'High'
     },
     {
         id: 'sales-friction',
         group: MATRIX_GROUPS.PRODUCT,
         title: 'Sales Friction',
         xAxis: 'Value Prop Clarity',
-        yAxis: 'No Brainer Score',
+        yAxis: 'No Brainer Buy',
         xKey: 'clarity',
         yKey: 'buyability',
         icon: Layers,
         lowLow: 'Consultative Sale',
         lowHigh: 'Commodity',
         highLow: 'Visionary Sell',
-        highHigh: 'PLG / Self-Serve'
+        highHigh: 'PLG / Self-Serve',
+        xStart: 'Unclear', xEnd: 'Clear', yStart: 'Long', yEnd: 'Instant'
     },
 
     // --- Row 4: Operations & Risk ---
@@ -208,7 +221,7 @@ const MATRICES = [
         id: 'risk-control',
         group: MATRIX_GROUPS.OPERATIONS,
         title: 'Operational Reliance',
-        xAxis: 'Dependency Control',
+        xAxis: 'Degree of control (dependencies)',
         yAxis: 'Operational Risk',
         xKey: 'control',
         yKey: 'risk',
@@ -216,7 +229,8 @@ const MATRICES = [
         lowLow: 'Platform Dependent',
         lowHigh: 'Gambling',
         highLow: 'Walled Garden',
-        highHigh: 'Sovereign'
+        highHigh: 'Sovereign',
+        xStart: 'Low', xEnd: 'High', yStart: 'Low', yEnd: 'High'
     },
     {
         id: 'tech-value',
@@ -230,7 +244,8 @@ const MATRICES = [
         lowLow: 'Wrapper',
         lowHigh: 'Deep Tech',
         highLow: 'Over-engineered',
-        highHigh: 'Moat'
+        highHigh: 'Moat',
+        xStart: 'Simple', xEnd: 'Complex', yStart: '$1', yEnd: '$1M'
     },
     {
         id: 'mindshare',
@@ -244,35 +259,38 @@ const MATRICES = [
         lowLow: 'Forgotten',
         lowHigh: 'Utility (Plumbing)',
         highLow: 'Addiction',
-        highHigh: 'Top of Mind'
+        highHigh: 'Top of Mind',
+        xStart: '0d', xEnd: '365d', yStart: 'Weekly', yEnd: 'Daily'
     },
     {
         id: 'cyborg',
         group: MATRIX_GROUPS.OPERATIONS,
-        title: 'Cyborg Matrix (AI)',
-        xAxis: 'Human Input Freq',
-        yAxis: 'AI Autonomy',
+        title: 'Manual/Autonomous',
+        xAxis: 'Freq of Human Input',
+        yAxis: 'AI/Autonomous',
         xKey: 'humanInput',
         yKey: 'aiAutonomy',
         icon: Cpu,
         lowLow: 'Legacy Tool',
         lowHigh: 'Black Box',
         highLow: 'Consultancy',
-        highHigh: 'Co-Pilot'
+        highHigh: 'Co-Pilot',
+        xStart: '0% (Auto)', xEnd: '100% (Manual)', yStart: '0 Auto', yEnd: '100% Auto'
     },
     {
         id: 'leverage',
         group: MATRIX_GROUPS.OPERATIONS,
         title: 'Output Leverage',
-        xAxis: 'Time Input (1yr)',
-        yAxis: 'Output ($)',
+        xAxis: '1 year time',
+        yAxis: 'Output in USD',
         xKey: 'timeInput',
         yKey: 'output',
         icon: TrendingUp,
         lowLow: 'Slog',
         lowHigh: 'High Leverage',
         highLow: 'Service Biz',
-        highHigh: 'Software Scale'
+        highHigh: 'Software Scale',
+        xStart: '0 hrs', xEnd: '2000 hrs', yStart: '$0', yEnd: '$10M'
     }
 ];
 
@@ -398,10 +416,23 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
             </div>
 
             {/* Chart Wrapper with space for axes */}
-            <div className="relative pl-8 pb-8 ">
-                {/* Y Axis Label */}
-                <div className="absolute left-0 top-0 bottom-8 flex items-center justify-center pointer-events-none w-8">
-                    <span className="text-xs font-bold -rotate-90 text-red-600 whitespace-nowrap tracking-wider">{matrix.yAxis}</span>
+            <div className="relative pl-28 pt-8 pb-6 pr-2">
+                {/* Y Axis Label - Top Center */}
+                <div className="absolute top-0 left-28 right-2 flex items-center justify-center pointer-events-none h-8">
+                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.yAxis}</span>
+                </div>
+
+                {/* X Axis Label - Left Center (Horizontal) */}
+                <div className="absolute left-0 top-8 bottom-6 w-28 flex items-center justify-end pr-3 pointer-events-none">
+                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.xAxis}</span>
+                </div>
+
+                {/* Y Axis Start/End Labels */}
+                <div className="absolute left-20 top-8 w-8 text-center pointer-events-none">
+                    <span className="text-[10px] text-slate-400 leading-none block mt-1">{matrix.yEnd}</span>
+                </div>
+                <div className="absolute left-20 bottom-6 w-8 text-center pointer-events-none">
+                    <span className="text-[10px] text-slate-400 leading-none block mb-1">{matrix.yStart}</span>
                 </div>
 
                 {/* Chart Area */}
@@ -461,9 +492,12 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
                     })}
                 </div>
 
-                {/* X Axis Label */}
-                <div className="absolute bottom-0 left-8 right-0 flex items-center justify-center pointer-events-none h-8">
-                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.xAxis}</span>
+                {/* X Axis Start/End Labels */}
+                <div className="absolute bottom-0 left-28 h-6 flex items-center pointer-events-none pl-1">
+                    <span className="text-[10px] text-slate-400 leading-none">{matrix.xStart}</span>
+                </div>
+                <div className="absolute bottom-0 right-2 h-6 flex items-center pointer-events-none pr-1">
+                    <span className="text-[10px] text-slate-400 leading-none">{matrix.xEnd}</span>
                 </div>
             </div>
         </div>
