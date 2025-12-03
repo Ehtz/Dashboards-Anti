@@ -271,10 +271,10 @@ export default function SaaSPricingCalculator() {
         const chartW = width - padding * 2;
         const chartH = height - padding * 2;
 
-        const scaleX = (val) => (val / data.maxX) * chartW + padding;
+        const scaleX = (val: number) => (val / data.maxX) * chartW + padding;
         // For flat line charts, we want a fixed range or dynamic? 
         // Using dynamic maxY from data ensures it fits.
-        const scaleY = (val) => height - padding - (val / data.maxY) * chartH;
+        const scaleY = (val: number) => height - padding - (val / data.maxY) * chartH;
 
         const pathD = data.points.map((p, i) =>
             `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`
