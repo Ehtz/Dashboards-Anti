@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson, Calculator } from 'lucide-react';
 
 // --- Types & Constants ---
 
@@ -607,6 +608,13 @@ export default function BusinessMatrixDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Link
+                            href="/pricing"
+                            className="flex items-center gap-2 bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg font-medium transition-all shadow-sm text-sm md:text-base"
+                        >
+                            <Calculator size={18} />
+                            Pricing Simulator
+                        </Link>
                         <button
                             onClick={() => {
                                 setShowAddModal(true);
