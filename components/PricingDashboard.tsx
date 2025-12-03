@@ -120,9 +120,9 @@ export default function SaaSPricingCalculator() {
     // --- State ---
 
     // Pricing Model
-    const [basePrice, setBasePrice] = useState(49);
+    const [basePrice, setBasePrice] = useState(20);
     const [includedSeats, setIncludedSeats] = useState(1);
-    const [pricePerSeat, setPricePerSeat] = useState(15);
+    const [pricePerSeat, setPricePerSeat] = useState(20);
 
     // Upsells
     const [upsellPrice, setUpsellPrice] = useState(99);
@@ -184,6 +184,12 @@ export default function SaaSPricingCalculator() {
         // Churn Impact
         const churnedMRR = mrr * (churnRate / 100);
         const churnedARR = churnedMRR * 12;
+        const churnedGrossProfit = totalGrossProfit * (churnRate / 100);
+
+        // Net values after churn
+        const netMRR = mrr - churnedMRR;
+        const netARR = arr - churnedARR;
+        const netGrossProfit = totalGrossProfit - churnedGrossProfit;
 
         // Lifetime Value (LTV) = Gross Profit / Churn Rate
         // Note: Using Gross Profit for LTV is more accurate than just Revenue
@@ -209,6 +215,10 @@ export default function SaaSPricingCalculator() {
             totalGrossProfit,
             churnedMRR,
             churnedARR,
+            churnedGrossProfit,
+            netMRR,
+            netARR,
+            netGrossProfit,
             expandedUserRevenue,
             expansionCostOnly,
             totalRevenueFromExpanded,
@@ -357,7 +367,7 @@ export default function SaaSPricingCalculator() {
 
     // --- SVG Chart Helpers ---
 
-    const Chart = ({ data, height = 240, xFormatter }: {
+    const Chart = ({ data, height = 320, xFormatter }: {
         data: { points: { x: number; y: number }[]; maxX: number; maxY: number; type: string };
         height?: number;
         xFormatter: (val: number) => string
@@ -451,7 +461,7 @@ export default function SaaSPricingCalculator() {
     };
 
     const WhaleChart = ({ data, type }: { data: { x: number; profitPct: number; marginPct: number }[]; type: 'profit' | 'margin' }) => {
-        const height = 240;
+        const height = 320;
         const padding = 40;
         const width = 600;
         const chartW = width - padding * 2;
@@ -547,25 +557,46 @@ export default function SaaSPricingCalculator() {
                                 label="Total Customers"
                                 value={totalCustomers}
                                 onChange={setTotalCustomers}
-                                min={0} max={5000} step={10}
+                                min={0} max={5000} step={5}
                                 helpText="Number of active paying accounts."
                             />
+
+                            {/* Direct Number Input */}
+                            <div className="mt-3 mb-4">
+                                <label className="text-xs font-medium text-slate-600 mb-1.5 block">
+                                    Or enter exact number:
+                                </label>
+                                <input
+                                    type="number"
+                                    value={totalCustomers}
+                                    onChange={(e) => {
+                                        const val = Number(e.target.value);
+                                        if (val >= 0 && val <= 5000) {
+                                            setTotalCustomers(val);
+                                        }
+                                    }}
+                                    min={0}
+                                    max={5000}
+                                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-mono font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                    placeholder="Enter number of customers"
+                                />
+                            </div>
+
                             <div className="pt-4 border-t border-slate-100">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Growth Assumptions</p>
                                 <InputGroup
                                     label="Yearly Growth Rate"
                                     value={yearlyGrowthRate}
                                     onChange={setYearlyGrowthRate}
-                                    min={0} max={200} suffix="%"
+                                    min={0} max={100000} suffix="%"
                                     helpText="Expected year-over-year growth."
+                                    caption={
+                                        <span className="text-red-600">
+                                            {totalCustomers.toLocaleString()} → {Math.round(totalCustomers * (1 + yearlyGrowthRate / 100)).toLocaleString()} customers in 1 year
+                                        </span>
+                                    }
                                 />
-                                <InputGroup
-                                    label="New Cust. / Month"
-                                    value={monthlyNewCustomers}
-                                    onChange={setMonthlyNewCustomers}
-                                    min={0} max={100}
-                                    helpText="Linear growth (net new adds)."
-                                />
+
                             </div>
                         </Card>
 
@@ -583,9 +614,11 @@ export default function SaaSPricingCalculator() {
                                 min={0.5} max={15} step={0.5} suffix="%"
                                 helpText="Probability of a customer cancelling each month."
                                 caption={
-                                    <span>
-                                        -{metrics.churnedMRR.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} /mo
-                                    </span>
+                                    <div className="space-y-0.5">
+                                        <div className="text-amber-600">MRR Impact: -{metrics.churnedMRR.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo</div>
+                                        <div className="text-amber-600">ARR Impact: -{metrics.churnedARR.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/yr</div>
+                                        <div className="text-amber-600">Gross Profit Impact: -{metrics.churnedGrossProfit.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo</div>
+                                    </div>
                                 }
                             />
                             <InputGroup
@@ -683,7 +716,7 @@ export default function SaaSPricingCalculator() {
                     <div className="lg:col-span-8 space-y-6">
 
                         {/* Top Level Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <StatCard
                                 label="MRR"
                                 value={`$${metrics.mrr.toLocaleString()}`}
@@ -694,6 +727,30 @@ export default function SaaSPricingCalculator() {
                                 label="ARR"
                                 value={`$${metrics.arr.toLocaleString()}`}
                                 subtext="Annual Run Rate"
+                            />
+                            <StatCard
+                                label="Gross Profit"
+                                value={`$${metrics.totalGrossProfit.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                                subtext={`${grossMargin}% Margin`}
+                                highlight={true}
+                            />
+                            <StatCard
+                                label="Net MRR"
+                                value={`$${metrics.netMRR.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                                subtext={`After ${churnRate}% churn`}
+                                alert={churnRate > 5}
+                            />
+                            <StatCard
+                                label="Net ARR"
+                                value={`$${metrics.netARR.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                                subtext="After churn impact"
+                                alert={churnRate > 5}
+                            />
+                            <StatCard
+                                label="Net Gross Profit"
+                                value={`$${metrics.netGrossProfit.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                                subtext="After churn impact"
+                                alert={churnRate > 5}
                             />
                             <StatCard
                                 label="LTV"
@@ -744,10 +801,10 @@ export default function SaaSPricingCalculator() {
                                     </div>
                                 </div>
 
-                                <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
                                     <Chart
                                         data={scaleChartData}
-                                        height={192}
+                                        height={320}
                                         xFormatter={(val) => `${Math.round(val)}`}
                                     />
                                 </div>
@@ -767,10 +824,10 @@ export default function SaaSPricingCalculator() {
                                     </div>
                                 </div>
 
-                                <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
                                     <Chart
                                         data={timeChartData}
-                                        height={192}
+                                        height={320}
                                         xFormatter={(val) => val === 0 ? 'Now' : `Mo ${val}`}
                                     />
                                 </div>
@@ -796,7 +853,7 @@ export default function SaaSPricingCalculator() {
                                         <h3 className="font-semibold text-slate-800">The "Whale Curve"</h3>
                                         <p className="text-xs text-slate-400">Cumulative Profit % by Customer Percentile</p>
                                     </div>
-                                    <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                    <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
                                         <WhaleChart data={whaleData.points} type="profit" />
                                     </div>
                                     <div className="mt-4 text-xs text-slate-500 flex gap-4">
@@ -817,7 +874,7 @@ export default function SaaSPricingCalculator() {
                                         <h3 className="font-semibold text-slate-800">Gross Margin Curve</h3>
                                         <p className="text-xs text-slate-400">Cumulative Margin % by Customer Percentile</p>
                                     </div>
-                                    <div className="h-48 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                    <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
                                         <WhaleChart data={whaleData.points} type="margin" />
                                     </div>
                                     <div className="mt-4 text-xs text-slate-500">
