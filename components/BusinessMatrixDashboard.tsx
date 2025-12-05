@@ -343,8 +343,8 @@ const MATRICES = [
 const INITIAL_BUSINESSES = [
     {
         id: 1,
-        name: 'FedEx',
-        color: '#4f46e5', // Indigo
+        name: 'Apple Inc',
+        color: '#1442f9ff', // Indigo
         desc: 'Global logistics giant with massive physical infrastructure.',
         scores: {
             frequency: 60, netMargin: 15, grossMargin: 40, arpu: 70, ltv: 85,
@@ -404,62 +404,6 @@ const INITIAL_BUSINESSES = [
 
 const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [draggingId, setDraggingId] = useState<number | null>(null);
-
-    // Handle global mouse move/up to allow dragging outside the box
-    useEffect(() => {
-        const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
-            if (!draggingId || !containerRef.current) return;
-            // e.preventDefault(); // Commented out to prevent passive event listener issues
-
-            const rect = containerRef.current.getBoundingClientRect();
-
-            // Calculate X and Y as percentages (0-100)
-            // We clamp between 0 and 100
-            let clientX, clientY;
-            if ('touches' in e) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = (e as MouseEvent).clientX;
-                clientY = (e as MouseEvent).clientY;
-            }
-
-            let x = ((clientX - rect.left) / rect.width) * 100;
-            let y = ((clientY - rect.top) / rect.height) * 100;
-
-            x = Math.max(0, Math.min(100, x));
-            y = Math.max(0, Math.min(100, y));
-
-            // Y is typically inverted in CSS (bottom=0 is visual bottom), 
-            // but clientY increases downwards. 
-            // If we want visual drag: 
-            // Mouse Top (0) -> CSS Bottom (100)
-            // Mouse Bottom (100) -> CSS Bottom (0)
-            const invertedY = 100 - y;
-
-            onUpdateScore(draggingId, matrix.xKey, Math.round(x), matrix.yKey, Math.round(invertedY));
-        };
-
-        const handleGlobalUp = () => {
-            setDraggingId(null);
-        };
-
-        if (draggingId) {
-            window.addEventListener('mousemove', handleGlobalMove);
-            window.addEventListener('mouseup', handleGlobalUp);
-            // Support Touch
-            window.addEventListener('touchmove', handleGlobalMove);
-            window.addEventListener('touchend', handleGlobalUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleGlobalMove);
-            window.removeEventListener('mouseup', handleGlobalUp);
-            window.removeEventListener('touchmove', handleGlobalMove);
-            window.removeEventListener('touchend', handleGlobalUp);
-        };
-    }, [draggingId, matrix, onUpdateScore]);
 
 
     return (
@@ -516,32 +460,65 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
                     {businesses.map((biz: any) => {
                         const x = biz.scores[matrix.xKey] || 50;
                         const y = biz.scores[matrix.yKey] || 50;
-                        const isDragging = draggingId === biz.id;
+
+                        // Determine tooltip position based on dot location
+                        const isNearTop = y > 70;
+                        const isNearBottom = y < 30;
+                        const isNearLeft = x < 30;
+                        const isNearRight = x > 70;
+
+                        // Build tooltip position classes dynamically
+                        let tooltipPositionClass = '';
+                        let labelPositionClass = '';
+
+                        if (isNearTop) {
+                            tooltipPositionClass = 'top-full left-1/2 -translate-x-1/2 mt-2';
+                            labelPositionClass = 'top-full left-1/2 -translate-x-1/2 mt-7';
+                        } else if (isNearBottom) {
+                            tooltipPositionClass = 'bottom-full left-1/2 -translate-x-1/2 mb-2';
+                            labelPositionClass = 'bottom-full left-1/2 -translate-x-1/2 mb-7';
+                        } else if (isNearLeft) {
+                            tooltipPositionClass = 'left-full top-1/2 -translate-y-1/2 ml-2';
+                            labelPositionClass = 'left-full top-1/2 -translate-y-1/2 ml-7';
+                        } else if (isNearRight) {
+                            tooltipPositionClass = 'right-full top-1/2 -translate-y-1/2 mr-2';
+                            labelPositionClass = 'right-full top-1/2 -translate-y-1/2 mr-7';
+                        } else {
+                            // Default: show above
+                            tooltipPositionClass = 'bottom-full left-1/2 -translate-x-1/2 mb-2';
+                            labelPositionClass = 'bottom-full left-1/2 -translate-x-1/2 mb-7';
+                        }
 
                         return (
                             <div
                                 key={biz.id}
-                                onMouseDown={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
-                                onTouchStart={(e) => { e.stopPropagation(); setDraggingId(biz.id); }}
-                                className={`absolute w-5 h-5 rounded-full border-2 shadow-md transform -translate-x-1/2 -translate-y-1/2 transition-shadow z-20 
-                ${isDragging ? 'cursor-grabbing scale-110 ring-2 ring-offset-2 ring-slate-400' : 'cursor-grab hover:scale-125'}
-              `}
+                                className="absolute w-5 h-5 rounded-full border-2 shadow-md transform -translate-x-1/2 -translate-y-1/2 transition-all z-20 hover:scale-125 cursor-default group"
                                 style={{
                                     left: `${x}%`,
                                     bottom: `${y}%`,
                                     backgroundColor: biz.color,
-                                    borderColor: isDragging ? '#fff' : 'white'
+                                    borderColor: 'white'
                                 }}
                             >
-                                {/* Tooltip only if not dragging */}
-                                {!isDragging && (
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-neutral-800 text-white text-xs rounded p-2 z-50 pointer-events-none shadow-lg border border-neutral-700">
-                                        <div className="font-bold">{biz.name}</div>
-                                        <div className="text-[10px] opacity-80 mt-1">
-                                            X: {x} | Y: {y}
-                                        </div>
+                                {/* Permanent Label */}
+                                <div
+                                    className={`absolute ${labelPositionClass} text-[10px] font-bold text-slate-700 px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none`}
+                                    style={{
+                                        backgroundColor: `${biz.color}33`,
+                                        color: biz.color,
+                                        border: `1px solid ${biz.color}66`
+                                    }}
+                                >
+                                    {biz.name}
+                                </div>
+
+                                {/* Tooltip with dynamic positioning */}
+                                <div className={`absolute ${tooltipPositionClass} hidden group-hover:block w-32 bg-neutral-800 text-white text-xs rounded p-2 z-50 pointer-events-none shadow-lg border border-neutral-700 whitespace-nowrap`}>
+                                    <div className="font-bold">{biz.name}</div>
+                                    <div className="text-[10px] opacity-80 mt-1">
+                                        X: {x} | Y: {y}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         );
                     })}
@@ -570,6 +547,30 @@ export default function BusinessMatrixDashboard() {
     const [jsonInput, setJsonInput] = useState('');
     const [importError, setImportError] = useState('');
     const [importSuccess, setImportSuccess] = useState('');
+
+    // LocalStorage: Load businesses on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('patternmaster-businesses');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setBusinesses(parsed);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load businesses from localStorage:', error);
+        }
+    }, []);
+
+    // LocalStorage: Save businesses whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('patternmaster-businesses', JSON.stringify(businesses));
+        } catch (error) {
+            console.error('Failed to save businesses to localStorage:', error);
+        }
+    }, [businesses]);
 
     // Initialize all possible score keys to 50
     const initialScores = useMemo(() => {
