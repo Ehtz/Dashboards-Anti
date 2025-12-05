@@ -321,6 +321,21 @@ const MATRICES = [
         highLow: 'Service Biz',
         highHigh: 'Software Scale',
         xStart: '0 hrs', xEnd: '2000 hrs', yStart: '$0', yEnd: '$10M'
+    },
+    {
+        id: 'gender-distribution',
+        group: MATRIX_GROUPS.MARKET,
+        title: 'Customer Gender Distribution',
+        xAxis: 'Women % of Customers',
+        yAxis: 'Men % of Customers',
+        xKey: 'womenPercent',
+        yKey: 'menPercent',
+        icon: Users,
+        lowLow: 'Undefined Segment',
+        lowHigh: 'Male Dominated',
+        highLow: 'Female Dominated',
+        highHigh: 'Balanced Demographics',
+        xStart: '0%', xEnd: '100%', yStart: '0%', yEnd: '100%'
     }
 ];
 
@@ -339,7 +354,8 @@ const INITIAL_BUSINESSES = [
             control: 90, risk: 40, complexity: 95, mindShare: 85,
 
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
-            buyingFreq1y: 70, buyingFreq5y: 75
+            buyingFreq1y: 70, buyingFreq5y: 75,
+            womenPercent: 45, menPercent: 52
         },
         // We duplicate scores to initialScores to allow "Reset to Default"
         initialScores: {
@@ -350,7 +366,8 @@ const INITIAL_BUSINESSES = [
             control: 90, risk: 40, complexity: 95, mindShare: 85,
 
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
-            buyingFreq1y: 70, buyingFreq5y: 75
+            buyingFreq1y: 70, buyingFreq5y: 75,
+            womenPercent: 45, menPercent: 52
         },
         reasoning: "FedEx combines extreme efficiency (hub-and-spoke) with robust resilience. High trust, high utility, massive infrastructure moat."
     },
@@ -366,7 +383,8 @@ const INITIAL_BUSINESSES = [
             marketSize: 85, csat: 85, clarity: 60, buyability: 80,
             control: 95, risk: 20, complexity: 60, mindShare: 80,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
-            buyingFreq1y: 40, buyingFreq5y: 45
+            buyingFreq1y: 40, buyingFreq5y: 45,
+            womenPercent: 50, menPercent: 48
         },
         initialScores: {
             frequency: 90, netMargin: 30, grossMargin: 85, arpu: 40, ltv: 75,
@@ -375,7 +393,8 @@ const INITIAL_BUSINESSES = [
             marketSize: 85, csat: 85, clarity: 60, buyability: 80,
             control: 95, risk: 20, complexity: 60, mindShare: 80,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
-            buyingFreq1y: 40, buyingFreq5y: 45
+            buyingFreq1y: 40, buyingFreq5y: 45,
+            womenPercent: 50, menPercent: 48
         },
         reasoning: "High virality PLG motion. High AI integration. Slightly higher cognitive load due to flexibility."
     }
@@ -667,7 +686,7 @@ export default function BusinessMatrixDashboard() {
 
 
     return (
-        <div className="min-h-screen bg-black text-slate-200 font-sans">
+        <div className="min-h-screen bg-gray-400 text-slate-200 font-sans">
 
             {/* Top Navigation Bar */}
             <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-30 shadow-sm">
@@ -842,7 +861,7 @@ export default function BusinessMatrixDashboard() {
                                     <textarea
                                         readOnly
                                         value={JSON.stringify(businesses, null, 2)}
-                                        className="w-full flex-1 p-4 border border-slate-300 rounded-lg font-mono text-xs bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[300px]"
+                                        className="w-full flex-1 p-4 border text-slate-800 border-slate-300 rounded-lg font-mono text-xs bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[300px]"
                                     />
 
                                     {importSuccess && (
