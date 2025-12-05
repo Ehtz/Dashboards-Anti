@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson, Calculator } from 'lucide-react';
+import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson, Calculator, Eye, EyeOff } from 'lucide-react';
 
 // --- Types & Constants ---
 
@@ -26,8 +26,8 @@ const MATRICES = [
         yKey: 'netMargin',
         icon: DollarSign,
         lowLow: 'Cash Burner',
-        lowHigh: 'Niche Profitable',
-        highLow: 'High Churn Risk',
+        lowHigh: 'High Churn Risk',
+        highLow: 'Niche Profitable',
         highHigh: 'Cash Cow',
         xStart: '0d', xEnd: '365d', yStart: '0%', yEnd: '100%'
     },
@@ -41,8 +41,8 @@ const MATRICES = [
         yKey: 'grossMargin',
         icon: DollarSign,
         lowLow: 'Commodity',
-        lowHigh: 'Premium Service',
-        highLow: 'Volume Play',
+        lowHigh: 'Volume Play',
+        highLow: 'Premium Service',
         highHigh: 'SaaS Unicorn',
         xStart: '0d', xEnd: '365d', yStart: '0%', yEnd: '100%'
     },
@@ -56,8 +56,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Activity,
         lowLow: 'Low Value',
-        lowHigh: 'Enterprise (One-off)',
-        highLow: 'Ad/Micro-trans',
+        lowHigh: 'Ad/Micro-trans',
+        highLow: 'Enterprise (One-off)',
         highHigh: 'Recurring Enterprise',
         xStart: '0d', xEnd: '365d', yStart: '$1', yEnd: '$1M (Log)'
     },
@@ -71,8 +71,8 @@ const MATRICES = [
         yKey: 'ltv',
         icon: TrendingUp,
         lowLow: 'Churn Factory',
-        lowHigh: 'Consulting Model',
-        highLow: 'Utility Subscription',
+        lowHigh: 'Utility Subscription',
+        highLow: 'Consulting Model',
         highHigh: 'Compounder',
         xStart: '0d', xEnd: '365d', yStart: '$100', yEnd: '$10M (Log)'
     },
@@ -86,8 +86,8 @@ const MATRICES = [
         yKey: 'buyingFreq1y',
         icon: Activity,
         lowLow: 'Rare Purchase',
-        lowHigh: 'Automated/Forced',
-        highLow: 'Free/Ad-Supported',
+        lowHigh: 'Free/Ad-Supported',
+        highLow: 'Automated/Forced',
         highHigh: 'Daily Transactor',
         xStart: 'Low', xEnd: 'High', yStart: '1/yr', yEnd: 'Daily'
     },
@@ -101,8 +101,8 @@ const MATRICES = [
         yKey: 'buyingFreq5y',
         icon: TrendingUp,
         lowLow: 'One-off',
-        lowHigh: 'Recurring Utility',
-        highLow: 'Engaged Free',
+        lowHigh: 'Engaged Free',
+        highLow: 'Recurring Utility',
         highHigh: 'Loyal Subscriber',
         xStart: 'Low', xEnd: 'High', yStart: '1/5yr', yEnd: 'Daily'
     },
@@ -118,8 +118,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Globe,
         lowLow: 'Niche Hobby',
-        lowHigh: 'Boutique Luxury',
-        highLow: 'Mass Market',
+        lowHigh: 'Mass Market',
+        highLow: 'Boutique Luxury',
         highHigh: 'Platform Giant',
         xStart: '$10M', xEnd: '$100B', yStart: '$1', yEnd: '$1M'
     },
@@ -133,8 +133,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Target,
         lowLow: 'Local Player',
-        lowHigh: 'Specialized High-End',
-        highLow: 'Regional Vol',
+        lowHigh: 'Regional Vol',
+        highLow: 'Specialized High-End',
         highHigh: 'Market Leader',
         xStart: '$1M', xEnd: '$10B', yStart: '$1', yEnd: '$1M'
     },
@@ -148,8 +148,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Target,
         lowLow: 'Struggling',
-        lowHigh: 'Profitable Niche',
-        highLow: 'Commodity Winner',
+        lowHigh: 'Commodity Winner',
+        highLow: 'Profitable Niche',
         highHigh: 'Monopoly',
         xStart: '$100k', xEnd: '$1B', yStart: '$1', yEnd: '$1M'
     },
@@ -163,8 +163,8 @@ const MATRICES = [
         yKey: 'ltv',
         icon: BarChart3,
         lowLow: 'The Graveyard',
-        lowHigh: 'Organic/Viral',
-        highLow: 'Venture Burn',
+        lowHigh: 'Venture Burn',
+        highLow: 'Organic/Viral',
         highHigh: 'Enterprise Scale',
         xStart: '$0', xEnd: '$50k (CAC)', yStart: '$100', yEnd: '$1M (LTV)'
     },
@@ -180,8 +180,8 @@ const MATRICES = [
         yKey: 'quality',
         icon: Zap,
         lowLow: 'Doomed',
-        lowHigh: 'Legacy Bank',
-        highLow: 'Move Fast Break Things',
+        lowHigh: 'Move Fast Break Things',
+        highLow: 'Legacy Bank',
         highHigh: 'High Performer',
         xStart: 'Slow', xEnd: 'Fast', yStart: 'Low', yEnd: 'High'
     },
@@ -195,8 +195,8 @@ const MATRICES = [
         yKey: 'shareOpp',
         icon: Users,
         lowLow: 'Secret Tool',
-        lowHigh: 'Referral Driven',
-        highLow: 'Habitual',
+        lowHigh: 'Habitual',
+        highLow: 'Referral Driven',
         highHigh: 'Social/Viral',
         xStart: '0d', xEnd: '365d', yStart: '0', yEnd: '100'
     },
@@ -210,8 +210,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Brain,
         lowLow: 'Cheap & Simple',
-        lowHigh: 'Enterprise Complex',
-        highLow: 'Consumer App',
+        lowHigh: 'Consumer App',
+        highLow: 'Enterprise Complex',
         highHigh: 'Invisible Tech',
         xStart: 'Simple', xEnd: 'Complex', yStart: '$1', yEnd: '$1M'
     },
@@ -225,8 +225,8 @@ const MATRICES = [
         yKey: 'nps',
         icon: Check,
         lowLow: 'Pivot Needed',
-        lowHigh: 'Cult Product',
-        highLow: 'Leaky Bucket',
+        lowHigh: 'Leaky Bucket',
+        highLow: 'Cult Product',
         highHigh: 'Scale Ready',
         xStart: 'Niche', xEnd: 'Mass', yStart: 'Low', yEnd: 'High'
     },
@@ -240,8 +240,8 @@ const MATRICES = [
         yKey: 'buyability',
         icon: Layers,
         lowLow: 'Consultative Sale',
-        lowHigh: 'Commodity',
-        highLow: 'Visionary Sell',
+        lowHigh: 'Visionary Sell',
+        highLow: 'Commodity',
         highHigh: 'PLG / Self-Serve',
         xStart: 'Unclear', xEnd: 'Clear', yStart: 'Long', yEnd: 'Instant'
     },
@@ -257,8 +257,8 @@ const MATRICES = [
         yKey: 'risk',
         icon: Shield,
         lowLow: 'Platform Dependent',
-        lowHigh: 'Gambling',
-        highLow: 'Walled Garden',
+        lowHigh: 'Walled Garden',
+        highLow: 'Gambling',
         highHigh: 'Sovereign',
         xStart: 'Low', xEnd: 'High', yStart: 'Low', yEnd: 'High'
     },
@@ -272,8 +272,8 @@ const MATRICES = [
         yKey: 'arpu',
         icon: Lock,
         lowLow: 'Wrapper',
-        lowHigh: 'Deep Tech',
-        highLow: 'Over-engineered',
+        lowHigh: 'Over-engineered',
+        highLow: 'Deep Tech',
         highHigh: 'Moat',
         xStart: 'Simple', xEnd: 'Complex', yStart: '$1', yEnd: '$1M'
     },
@@ -287,10 +287,10 @@ const MATRICES = [
         yKey: 'mindShare',
         icon: Brain,
         lowLow: 'Forgotten',
-        lowHigh: 'Utility (Plumbing)',
-        highLow: 'Addiction',
+        lowHigh: 'Addiction',
+        highLow: 'Utility (Plumbing)',
         highHigh: 'Top of Mind',
-        xStart: '0d', xEnd: '365d', yStart: 'Weekly', yEnd: 'Daily'
+        xStart: '0d', xEnd: '365d', yStart: 'Forgotten after use', yEnd: 'Daily'
     },
     {
         id: 'cyborg',
@@ -302,8 +302,8 @@ const MATRICES = [
         yKey: 'aiAutonomy',
         icon: Cpu,
         lowLow: 'Legacy Tool',
-        lowHigh: 'Black Box',
-        highLow: 'Consultancy',
+        lowHigh: 'Consultancy',
+        highLow: 'Black Box',
         highHigh: 'Co-Pilot',
         xStart: '0% (Auto)', xEnd: '100% (Manual)', yStart: '0 Auto', yEnd: '100% Auto'
     },
@@ -317,8 +317,8 @@ const MATRICES = [
         yKey: 'output',
         icon: TrendingUp,
         lowLow: 'Slog',
-        lowHigh: 'High Leverage',
-        highLow: 'Service Biz',
+        lowHigh: 'Service Biz',
+        highLow: 'High Leverage',
         highHigh: 'Software Scale',
         xStart: '0 hrs', xEnd: '2000 hrs', yStart: '$0', yEnd: '$10M'
     },
@@ -541,6 +541,7 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
 export default function BusinessMatrixDashboard() {
     const [businesses, setBusinesses] = useState(INITIAL_BUSINESSES);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [visibleBusinessIds, setVisibleBusinessIds] = useState<Set<number>>(new Set(INITIAL_BUSINESSES.map(b => b.id)));
 
     // Import/Export State
     const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
@@ -556,6 +557,7 @@ export default function BusinessMatrixDashboard() {
                 const parsed = JSON.parse(saved);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     setBusinesses(parsed);
+                    setVisibleBusinessIds(new Set(parsed.map((b: any) => b.id)));
                 }
             }
         } catch (error) {
@@ -580,6 +582,18 @@ export default function BusinessMatrixDashboard() {
     }, []);
 
     const [newBizScores, setNewBizScores] = useState(initialScores);
+
+    const toggleBusinessVisibility = (id: number) => {
+        setVisibleBusinessIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
 
     const handleImport = () => {
         if (!jsonInput) return;
@@ -614,6 +628,12 @@ export default function BusinessMatrixDashboard() {
             });
 
             setBusinesses(prev => [...prev, ...validBusinesses]);
+            // Add newly imported businesses to visible set
+            setVisibleBusinessIds(prev => {
+                const newSet = new Set(prev);
+                validBusinesses.forEach(b => newSet.add(b.id));
+                return newSet;
+            });
             setImportSuccess(`Successfully imported ${validBusinesses.length} business(es)`);
             setJsonInput('');
             setTimeout(() => {
@@ -730,52 +750,68 @@ export default function BusinessMatrixDashboard() {
                 {/* Active Businesses Filters */}
                 <div className="mb-8 flex flex-wrap gap-4 items-center bg-neutral-900 p-4 rounded-xl border border-neutral-800 shadow-sm">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Entities:</span>
-                    {businesses.map(b => (
-                        <div key={b.id} className="flex items-center gap-2 bg-neutral-800 pl-3 pr-2 py-1.5 rounded-full border border-neutral-700 shadow-sm group">
-                            <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: b.color }}></span>
-                            <span className="font-bold text-sm text-slate-200">{b.name}</span>
+                    {businesses.map(b => {
+                        const isVisible = visibleBusinessIds.has(b.id);
+                        return (
+                            <div key={b.id} className={`flex items-center gap-2 bg-neutral-800 pl-3 pr-2 py-1.5 rounded-full border border-neutral-700 shadow-sm group transition-opacity ${!isVisible ? 'opacity-50' : ''}`}>
+                                <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: b.color }}></span>
+                                <span className="font-bold text-sm text-slate-200">{b.name}</span>
 
-                            <div className="flex items-center gap-1 border-l border-neutral-600 pl-2 ml-1">
-                                <button
-                                    onClick={() => resetBusinessToDefault(b.id)}
-                                    title="Reset to default analysis position"
-                                    className="text-slate-400 hover:text-indigo-400 transition-colors p-1 rounded-md hover:bg-neutral-700"
-                                >
-                                    <RotateCcw size={12} />
-                                </button>
-                                <button
-                                    onClick={() => deleteBusiness(b.id)}
-                                    title="Remove business"
-                                    className="text-slate-400 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-neutral-700"
-                                >
-                                    <X size={14} />
-                                </button>
+                                <div className="flex items-center gap-1 border-l border-neutral-600 pl-2 ml-1">
+                                    <button
+                                        onClick={() => toggleBusinessVisibility(b.id)}
+                                        title={isVisible ? "Hide entity" : "Show entity"}
+                                        className={`transition-colors p-1 rounded-md hover:bg-neutral-700 ${isVisible ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-600 hover:text-indigo-400'}`}
+                                    >
+                                        {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
+                                    </button>
+                                    <button
+                                        onClick={() => resetBusinessToDefault(b.id)}
+                                        title="Reset to default analysis position"
+                                        className="text-slate-400 hover:text-indigo-400 transition-colors p-1 rounded-md hover:bg-neutral-700"
+                                    >
+                                        <RotateCcw size={12} />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteBusiness(b.id)}
+                                        title="Remove business"
+                                        className="text-slate-400 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-neutral-700"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {businesses.length === 0 && <span className="text-sm text-slate-400 italic">No businesses loaded. Add one to start.</span>}
                 </div>
 
+
                 {/* Matrix Grid Grouped by Category */}
                 <div className="space-y-12">
-                    {Object.entries(groupedMatrices).map(([groupName, matrices]) => (
-                        <div key={groupName}>
-                            <div className="flex items-center gap-2 mb-6 border-b border-neutral-800 pb-2">
-                                <Layers className="text-indigo-500" size={20} />
-                                <h2 className="text-xl font-bold text-slate-200">{groupName}</h2>
+                    {Object.entries(groupedMatrices).map(([groupName, matrices]) => {
+                        // Filter to only show visible businesses
+                        const visibleBusinesses = businesses.filter(b => visibleBusinessIds.has(b.id));
+
+                        return (
+                            <div key={groupName}>
+                                <div className="flex items-center gap-2 mb-6 border-b border-neutral-800 pb-2">
+                                    <Layers className="text-indigo-500" size={20} />
+                                    <h2 className="text-xl font-bold text-slate-200">{groupName}</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {matrices.map(matrix => (
+                                        <MatrixChart
+                                            key={matrix.id}
+                                            matrix={matrix}
+                                            businesses={visibleBusinesses}
+                                            onUpdateScore={updateBusinessScore}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {matrices.map(matrix => (
-                                    <MatrixChart
-                                        key={matrix.id}
-                                        matrix={matrix}
-                                        businesses={businesses}
-                                        onUpdateScore={updateBusinessScore}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </main>
 
