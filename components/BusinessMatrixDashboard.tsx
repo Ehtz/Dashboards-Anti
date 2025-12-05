@@ -336,6 +336,36 @@ const MATRICES = [
         highLow: 'Female Dominated',
         highHigh: 'Balanced Demographics',
         xStart: '0%', xEnd: '100%', yStart: '0%', yEnd: '100%'
+    },
+    {
+        id: 'arr-growth',
+        group: MATRIX_GROUPS.FINANCIALS,
+        title: 'ARR Growth Potential',
+        xAxis: 'Avg Use Frequency',
+        yAxis: 'ARR (Annual Recurring Revenue)',
+        xKey: 'frequency',
+        yKey: 'arr',
+        icon: TrendingUp,
+        lowLow: 'Low Engagement',
+        lowHigh: 'High Value Infrequent',
+        highLow: 'High Engagement Low Rev',
+        highHigh: 'Growth Engine',
+        xStart: '0d', xEnd: '365d', yStart: '$0', yEnd: '$100M+'
+    },
+    {
+        id: 'arr-complexity',
+        group: MATRIX_GROUPS.OPERATIONS,
+        title: 'ARR vs Infrastructure',
+        xAxis: 'Infra Complexity',
+        yAxis: 'ARR (Annual Recurring Revenue)',
+        xKey: 'complexity',
+        yKey: 'arr',
+        icon: DollarSign,
+        lowLow: 'Simple Low Revenue',
+        lowHigh: 'Simple High Revenue',
+        highLow: 'Over-engineered',
+        highHigh: 'Enterprise Scale',
+        xStart: 'Simple', xEnd: 'Complex', yStart: '$0', yEnd: '$100M+'
     }
 ];
 
@@ -352,7 +382,7 @@ const INITIAL_BUSINESSES = [
             shippingSpeed: 95, quality: 90, shareOpp: 20, cognitiveLoad: 20,
             marketSize: 95, csat: 80, clarity: 90, buyability: 85,
             control: 90, risk: 40, complexity: 95, mindShare: 85,
-
+            arr: 90,
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
             womenPercent: 45, menPercent: 52
@@ -364,7 +394,7 @@ const INITIAL_BUSINESSES = [
             shippingSpeed: 95, quality: 90, shareOpp: 20, cognitiveLoad: 20,
             marketSize: 95, csat: 80, clarity: 90, buyability: 85,
             control: 90, risk: 40, complexity: 95, mindShare: 85,
-
+            arr: 90,
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
             womenPercent: 45, menPercent: 52
@@ -382,6 +412,7 @@ const INITIAL_BUSINESSES = [
             shippingSpeed: 80, quality: 75, shareOpp: 85, cognitiveLoad: 70,
             marketSize: 85, csat: 85, clarity: 60, buyability: 80,
             control: 95, risk: 20, complexity: 60, mindShare: 80,
+            arr: 55,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
             womenPercent: 50, menPercent: 48
@@ -392,6 +423,7 @@ const INITIAL_BUSINESSES = [
             shippingSpeed: 80, quality: 75, shareOpp: 85, cognitiveLoad: 70,
             marketSize: 85, csat: 85, clarity: 60, buyability: 80,
             control: 95, risk: 20, complexity: 60, mindShare: 80,
+            arr: 55,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
             womenPercent: 50, menPercent: 48
