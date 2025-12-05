@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Calculator,
     Users,
@@ -126,7 +126,7 @@ export default function SaaSPricingCalculator() {
 
     // Upsells
     const [upsellPrice, setUpsellPrice] = useState(99);
-    const [upsellTakeRate, setUpsellTakeRate] = useState(20); // Percentage
+    const [upsellTakeRate, setUpsellTakeRate] = useState(0); // Percentage
 
     // Customer Assumptions
     const [expansionRate, setExpansionRate] = useState(30); // % of customers who expand
@@ -142,6 +142,12 @@ export default function SaaSPricingCalculator() {
 
     // View State
     const [chartMode, setChartMode] = useState('revenue'); // 'revenue' or 'profit'
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Track client-side mounting to prevent hydration mismatch
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // --- Calculations ---
 
@@ -250,15 +256,15 @@ export default function SaaSPricingCalculator() {
     }, [metrics.arpu, totalCustomers, chartMode, grossMargin]);
 
     // Data for "Time" chart (Revenue vs Months)
-    // Logic: Start from 0 (or current) and apply growth
+    // Logic: Model customer growth WITH churn properly applied
     const timeChartData = useMemo(() => {
         const points = [];
         const months = 12;
-        let currentCust = totalCustomers; // Start from current
-        // If user wants to see "from 0", they can set totalCustomers to 0.
+        let currentCust = totalCustomers;
 
         // Monthly Growth Rate derived from Yearly
         const monthlyGrowthRate = Math.pow(1 + yearlyGrowthRate / 100, 1 / 12) - 1;
+        const monthlyChurnRate = churnRate / 100;
 
         for (let i = 0; i <= months; i++) {
             const revenue = currentCust * metrics.arpu;
@@ -269,13 +275,53 @@ export default function SaaSPricingCalculator() {
                 y: chartMode === 'revenue' ? revenue : profit
             });
 
-            // Compound Growth + Linear Growth
-            currentCust = currentCust * (1 + monthlyGrowthRate) + monthlyNewCustomers;
+            // Apply churn FIRST (customers lost), then growth (new customers)
+            const churnedCustomers = currentCust * monthlyChurnRate;
+            const organicGrowth = currentCust * monthlyGrowthRate;
+            currentCust = currentCust - churnedCustomers + organicGrowth + monthlyNewCustomers;
+            currentCust = Math.max(0, currentCust); // Can't go negative
         }
 
-        const maxY = points[points.length - 1].y;
+        const maxY = Math.max(...points.map(p => p.y));
         return { points, maxX: months, maxY: maxY > 0 ? maxY * 1.2 : 100, type: 'time' };
-    }, [metrics.arpu, totalCustomers, chartMode, grossMargin, yearlyGrowthRate, monthlyNewCustomers]);
+    }, [metrics.arpu, totalCustomers, chartMode, grossMargin, yearlyGrowthRate, monthlyNewCustomers, churnRate]);
+
+    // Data for MRR Growth chart - properly models customer churn
+    const mrrChartData = useMemo(() => {
+        const points = [];
+        const months = 12;
+        let currentCust = totalCustomers;
+        const monthlyGrowthRate = Math.pow(1 + yearlyGrowthRate / 100, 1 / 12) - 1;
+        const monthlyChurnRate = churnRate / 100;
+
+        for (let i = 0; i <= months; i++) {
+            // Calculate MRR based on current customer count
+            const grossMRR = currentCust * metrics.arpu;
+
+            // Churn impact on MRR for this month
+            const churnedCustomersThisMonth = currentCust * monthlyChurnRate;
+            const churnedMRR = churnedCustomersThisMonth * metrics.arpu;
+            const netMRR = grossMRR - churnedMRR;
+
+            points.push({
+                x: i,
+                grossMRR,
+                netMRR,
+                churnedMRR,
+                customers: Math.round(currentCust),
+                churnedCustomers: Math.round(churnedCustomersThisMonth)
+            });
+
+            // Update customer count: subtract churn, add growth + new customers
+            const organicGrowth = currentCust * monthlyGrowthRate;
+            currentCust = currentCust - churnedCustomersThisMonth + organicGrowth + monthlyNewCustomers;
+            currentCust = Math.max(0, currentCust);
+        }
+
+        const maxMRR = Math.max(...points.map(p => p.grossMRR));
+        return { points, maxX: months, maxY: maxMRR * 1.2 };
+    }, [metrics.arpu, totalCustomers, churnRate, yearlyGrowthRate, monthlyNewCustomers]);
+
 
     // --- Whale Curve Data Generation ---
     const whaleData = useMemo(() => {
@@ -302,21 +348,23 @@ export default function SaaSPricingCalculator() {
 
         const customers = [];
 
+        // Seeded random function for deterministic results
+        const seededRandom = (seed: number) => {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        };
+
         // Whales
         for (let i = 0; i < 50; i++) {
-            const profit = 4 + (Math.random() * 0.5); // Add noise
-            const margin = 0.90; // High margin
+            const profit = 4 + (seededRandom(i) * 0.5);
+            const margin = 0.90;
             const revenue = profit / margin;
             customers.push({ profit, revenue, margin });
         }
 
         // High Performers
         for (let i = 0; i < 100; i++) {
-            const profit = 4 + (Math.random() * 0.5); // Similar profit to whales but maybe lower margin/higher rev? 
-            // Actually user said "Whales: High Rev, Low Cost". "High Perf: Good Rev, Low Cost".
-            // Let's make Whales slightly better.
-            // Adjusted: Whales Profit = 5, High Perf Profit = 3.5.
-            // 50 * 5 = 250. 100 * 3.5 = 350. Total = 600. Perfect.
+            const profit = 4 + (seededRandom(i + 50) * 0.5);
             const margin = 0.85;
             const revenue = profit / margin;
             customers.push({ profit, revenue, margin });
@@ -324,21 +372,16 @@ export default function SaaSPricingCalculator() {
 
         // Long Tail
         for (let i = 0; i < 750; i++) {
-            // Total target: 650. 650 / 750 = 0.86
-            const profit = 0.86 + (Math.random() * 0.1);
-            const margin = 0.80; // "Steady 80% Profit Margin"
+            const profit = 0.86 + (seededRandom(i + 150) * 0.1);
+            const margin = 0.80;
             const revenue = profit / margin;
             customers.push({ profit, revenue, margin });
         }
 
         // Unprofitable Tail
         for (let i = 0; i < 100; i++) {
-            // Target: -250. -250 / 100 = -2.5
-            const profit = -2.5 + (Math.random() * 0.5);
-            // "Medium Revenue, EXTREMELY High Cost"
-            // Rev = 2 (Medium), Cost = 4.5 -> Profit = -2.5
-            const revenue = 2 + (Math.random() * 0.5);
-            // Margin = Profit / Revenue (Negative)
+            const profit = -2.5 + (seededRandom(i + 900) * 0.5);
+            const revenue = 2 + (seededRandom(i + 1000) * 0.5);
             const margin = profit / revenue;
             customers.push({ profit, revenue, margin });
         }
@@ -372,6 +415,9 @@ export default function SaaSPricingCalculator() {
         height?: number;
         xFormatter: (val: number) => string
     }) => {
+        const [tooltip, setTooltip] = useState<{ x: number; y: number; xVal: number; yVal: number } | null>(null);
+        const svgRef = React.useRef<SVGSVGElement>(null);
+
         const padding = 40;
         const width = 600;
         const chartW = width - padding * 2;
@@ -379,6 +425,7 @@ export default function SaaSPricingCalculator() {
 
         const scaleX = (val: number) => (val / data.maxX) * chartW + padding;
         const scaleY = (val: number) => height - padding - (val / data.maxY) * chartH;
+        const inverseScaleX = (px: number) => ((px - padding) / chartW) * data.maxX;
 
         const pathD = data.points.map((p, i) =>
             `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`
@@ -387,12 +434,35 @@ export default function SaaSPricingCalculator() {
         const areaD = `${pathD} L ${scaleX(data.points[data.points.length - 1].x)} ${height - padding} L ${padding} ${height - padding} Z`;
 
         const lineColor = chartMode === 'revenue' ? '#4f46e5' : '#10b981';
-
         const ticks = data.type === 'time' ? [0, 3, 6, 9, 12] : [0, 0.5, 1];
 
+        const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+            if (!svgRef.current) return;
+            const rect = svgRef.current.getBoundingClientRect();
+            const svgX = ((e.clientX - rect.left) / rect.width) * width;
+            const svgY = ((e.clientY - rect.top) / rect.height) * height;
+            if (svgX < padding || svgX > width - padding || svgY < padding || svgY > height - padding) {
+                setTooltip(null);
+                return;
+            }
+            const xVal = inverseScaleX(svgX);
+            let closestPoint = data.points[0];
+            let minDist = Math.abs(data.points[0].x - xVal);
+            for (const point of data.points) {
+                const dist = Math.abs(point.x - xVal);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestPoint = point;
+                }
+            }
+            setTooltip({ x: svgX, y: scaleY(closestPoint.y), xVal: closestPoint.x, yVal: closestPoint.y });
+        };
+
+        const formatYValue = (val: number) => `$${(val / 1000).toFixed(1)}k`;
+
         return (
-            <div className="w-full h-full overflow-hidden">
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+            <div className="w-full h-full overflow-visible relative">
+                <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-full" onMouseMove={handleMouseMove} onMouseLeave={() => setTooltip(null)}>
                     {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
                         <g key={tick}>
                             <line
@@ -425,6 +495,12 @@ export default function SaaSPricingCalculator() {
                     </defs>
                     <path d={areaD} fill={`url(#gradient${chartMode === 'revenue' ? 'Revenue' : 'Profit'})`} />
                     <path d={pathD} fill="none" stroke={lineColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    {tooltip && (
+                        <>
+                            <line x1={tooltip.x} y1={padding} x2={tooltip.x} y2={height - padding} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" />
+                            <circle cx={tooltip.x} cy={tooltip.y} r="5" fill={lineColor} stroke="white" strokeWidth="2" />
+                        </>
+                    )}
                     {data.type === 'scale' && (
                         <circle
                             cx={scaleX(totalCustomers)}
@@ -456,26 +532,31 @@ export default function SaaSPricingCalculator() {
                         );
                     })}
                 </svg>
+                {tooltip && (
+                    <div className="absolute bg-slate-900 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-mono pointer-events-none z-10" style={{ left: `${(tooltip.x / width) * 100}%`, top: `${(tooltip.y / height) * 100}%`, transform: 'translate(-50%, -120%)' }}>
+                        <div className="font-semibold mb-1">{xFormatter(tooltip.xVal)}</div>
+                        <div className="text-emerald-300">{formatYValue(tooltip.yVal)}</div>
+                    </div>
+                )}
             </div>
         );
     };
 
     const WhaleChart = ({ data, type }: { data: { x: number; profitPct: number; marginPct: number }[]; type: 'profit' | 'margin' }) => {
+        const [tooltip, setTooltip] = useState<{ x: number; y: number; xVal: number; yVal: number } | null>(null);
+        const svgRef = React.useRef<SVGSVGElement>(null);
+
         const height = 320;
         const padding = 40;
         const width = 600;
         const chartW = width - padding * 2;
         const chartH = height - padding * 2;
 
-        // Scales
         const scaleX = (val: number) => (val / 100) * chartW + padding;
-
-        // Y Scale depends on type
-        // Profit: Min 0 (or neg?), Max ~130%
-        // Margin: 0 to 100%
         const maxY = type === 'profit' ? 140 : 100;
         const minY = type === 'profit' ? 0 : 0;
         const scaleY = (val: number) => height - padding - ((val - minY) / (maxY - minY)) * chartH;
+        const inverseScaleX = (px: number) => ((px - padding) / chartW) * 100;
 
         const pathD = data.map((p, i) =>
             `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(type === 'profit' ? p.profitPct : p.marginPct)}`
@@ -483,9 +564,32 @@ export default function SaaSPricingCalculator() {
 
         const areaD = `${pathD} L ${scaleX(100)} ${height - padding} L ${padding} ${height - padding} Z`;
 
+        const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+            if (!svgRef.current) return;
+            const rect = svgRef.current.getBoundingClientRect();
+            const svgX = ((e.clientX - rect.left) / rect.width) * width;
+            const svgY = ((e.clientY - rect.top) / rect.height) * height;
+            if (svgX < padding || svgX > width - padding || svgY < padding || svgY > height - padding) {
+                setTooltip(null);
+                return;
+            }
+            const xVal = inverseScaleX(svgX);
+            let closestPoint = data[0];
+            let minDist = Math.abs(data[0].x - xVal);
+            for (const point of data) {
+                const dist = Math.abs(point.x - xVal);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestPoint = point;
+                }
+            }
+            const yVal = type === 'profit' ? closestPoint.profitPct : closestPoint.marginPct;
+            setTooltip({ x: svgX, y: scaleY(yVal), xVal: closestPoint.x, yVal });
+        };
+
         return (
-            <div className="w-full h-full overflow-hidden">
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+            <div className="w-full h-full overflow-visible relative">
+                <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-full" onMouseMove={handleMouseMove} onMouseLeave={() => setTooltip(null)}>
                     {/* Grid */}
                     {[0, 0.25, 0.5, 0.75, 1].map(tick => (
                         <line key={tick} x1={padding} y1={scaleY(maxY * tick)} x2={width - padding} y2={scaleY(maxY * tick)} stroke="#e2e8f0" strokeDasharray="4 4" />
@@ -512,6 +616,12 @@ export default function SaaSPricingCalculator() {
 
                     <path d={areaD} fill={`url(#${type === 'profit' ? 'whaleGradient' : 'marginGradient'})`} />
                     <path d={pathD} fill="none" stroke={type === 'profit' ? '#8b5cf6' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    {tooltip && (
+                        <>
+                            <line x1={tooltip.x} y1={padding} x2={tooltip.x} y2={height - padding} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" />
+                            <circle cx={tooltip.x} cy={tooltip.y} r="5" fill={type === 'profit' ? '#8b5cf6' : '#f59e0b'} stroke="white" strokeWidth="2" />
+                        </>
+                    )}
 
                     {/* Labels */}
                     <text x={padding - 10} y={scaleY(maxY)} textAnchor="end" className="text-[10px] fill-slate-400 font-mono">{maxY}%</text>
@@ -519,9 +629,157 @@ export default function SaaSPricingCalculator() {
 
                     <text x={width / 2} y={height - 10} textAnchor="middle" className="text-[10px] fill-slate-400 font-mono">Customer Percentile (Top to Bottom)</text>
                 </svg>
+                {tooltip && (
+                    <div className="absolute bg-slate-900 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-mono pointer-events-none z-10" style={{ left: `${(tooltip.x / width) * 100}%`, top: `${(tooltip.y / height) * 100}%`, transform: 'translate(-50%, -120%)' }}>
+                        <div className="font-semibold mb-1">Percentile: {tooltip.xVal.toFixed(1)}%</div>
+                        <div className="text-emerald-300">{type === 'profit' ? 'Profit' : 'Margin'}: {tooltip.yVal.toFixed(1)}%</div>
+                    </div>
+                )}
             </div>
         )
     }
+
+    const MRRChart = ({ data, height = 320 }: {
+        data: { points: { x: number; grossMRR: number; netMRR: number; churnedMRR: number; customers: number; churnedCustomers: number }[]; maxX: number; maxY: number };
+        height?: number;
+    }) => {
+        const [tooltip, setTooltip] = useState<{ x: number; y: number; month: number; grossMRR: number; netMRR: number; churnedMRR: number; customers: number; churnedCustomers: number } | null>(null);
+        const svgRef = React.useRef<SVGSVGElement>(null);
+
+        const padding = 40;
+        const width = 600;
+        const chartW = width - padding * 2;
+        const chartH = height - padding * 2;
+
+        const scaleX = (val: number) => (val / data.maxX) * chartW + padding;
+        const scaleY = (val: number) => height - padding - (val / data.maxY) * chartH;
+        const inverseScaleX = (px: number) => ((px - padding) / chartW) * data.maxX;
+
+        const grossPath = data.points.map((p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.grossMRR)}`
+        ).join(' ');
+
+        const netPath = data.points.map((p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.netMRR)}`
+        ).join(' ');
+
+        const churnAreaPath = data.points.map((p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.grossMRR)}`
+        ).join(' ') + ' ' +
+            data.points.slice().reverse().map((p, i) =>
+                `${i === 0 ? 'L' : 'L'} ${scaleX(p.x)} ${scaleY(p.netMRR)}`
+            ).join(' ') + ' Z';
+
+        const netAreaPath = `${netPath} L ${scaleX(data.points[data.points.length - 1].x)} ${height - padding} L ${padding} ${height - padding} Z`;
+
+        const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+            if (!svgRef.current) return;
+            const rect = svgRef.current.getBoundingClientRect();
+            const svgX = ((e.clientX - rect.left) / rect.width) * width;
+            const svgY = ((e.clientY - rect.top) / rect.height) * height;
+            if (svgX < padding || svgX > width - padding || svgY < padding || svgY > height - padding) {
+                setTooltip(null);
+                return;
+            }
+            const xVal = inverseScaleX(svgX);
+            const monthIndex = Math.round(xVal);
+            if (monthIndex >= 0 && monthIndex < data.points.length) {
+                const point = data.points[monthIndex];
+                setTooltip({
+                    x: scaleX(point.x),
+                    y: scaleY(point.grossMRR),
+                    month: point.x,
+                    grossMRR: point.grossMRR,
+                    netMRR: point.netMRR,
+                    churnedMRR: point.churnedMRR,
+                    customers: point.customers,
+                    churnedCustomers: point.churnedCustomers
+                });
+            }
+        };
+
+        const formatMRR = (val: number) => `$${(val / 1000).toFixed(1)}k`;
+
+        return (
+            <div className="w-full h-full overflow-visible relative">
+                <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-full" onMouseMove={handleMouseMove} onMouseLeave={() => setTooltip(null)}>
+                    {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
+                        <g key={tick}>
+                            <line x1={padding} y1={scaleY(data.maxY * tick)} x2={width - padding} y2={scaleY(data.maxY * tick)} stroke="#e2e8f0" strokeDasharray="4 4" />
+                            <text x={padding - 10} y={scaleY(data.maxY * tick) + 4} textAnchor="end" className="text-[10px] fill-slate-400 font-mono">
+                                ${(data.maxY * tick / 1000).toFixed(1)}k
+                            </text>
+                        </g>
+                    ))}
+                    <defs>
+                        <linearGradient id="gradientNetMRR" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+                    <path d={netAreaPath} fill="url(#gradientNetMRR)" />
+                    <path d={churnAreaPath} fill="#ef4444" fillOpacity="0.1" />
+                    <path d={grossPath} fill="none" stroke="#4f46e5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={netPath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    {tooltip && (
+                        <>
+                            <line x1={tooltip.x} y1={padding} x2={tooltip.x} y2={height - padding} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" />
+                            <circle cx={tooltip.x} cy={scaleY(tooltip.grossMRR)} r="5" fill="#4f46e5" stroke="white" strokeWidth="2" />
+                            <circle cx={tooltip.x} cy={scaleY(tooltip.netMRR)} r="5" fill="#10b981" stroke="white" strokeWidth="2" />
+                        </>
+                    )}
+                    {[0, 3, 6, 9, 12].map((month) => (
+                        <text
+                            key={month}
+                            x={scaleX(month)}
+                            y={height - 10}
+                            textAnchor="middle"
+                            className="text-[10px] fill-slate-400 font-mono cursor-pointer hover:fill-indigo-600 transition-colors"
+                            onClick={() => {
+                                const point = data.points[month];
+                                if (point) {
+                                    setTooltip({
+                                        x: scaleX(point.x),
+                                        y: scaleY(point.grossMRR),
+                                        month: point.x,
+                                        grossMRR: point.grossMRR,
+                                        netMRR: point.netMRR,
+                                        churnedMRR: point.churnedMRR,
+                                        customers: point.customers,
+                                        churnedCustomers: point.churnedCustomers
+                                    });
+                                }
+                            }}
+                            style={{ pointerEvents: 'all' }}
+                        >
+                            {month === 0 ? 'Now' : `Mo ${month}`}
+                        </text>
+                    ))}
+                </svg>
+                {tooltip && (
+                    <div className="absolute bg-slate-900 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-mono pointer-events-none z-10" style={{ left: `${(tooltip.x / width) * 100}%`, top: `${(scaleY(tooltip.grossMRR) / height) * 100}%`, transform: 'translate(-50%, -120%)' }}>
+                        <div className="font-semibold mb-2">{tooltip.month === 0 ? 'Now' : `Month ${tooltip.month}`}</div>
+                        <div className="text-slate-400 text-[10px] mb-1">{tooltip.customers.toLocaleString()} customers</div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
+                                <span>Gross: {formatMRR(tooltip.grossMRR)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                                <span>Net: {formatMRR(tooltip.netMRR)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                                <span>Churn: {formatMRR(tooltip.churnedMRR)} ({tooltip.churnedCustomers} lost)</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
 
     return (
         <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
@@ -770,6 +1028,38 @@ export default function SaaSPricingCalculator() {
                                 alert={metrics.paybackPeriod > 12}
                             />
                         </div>
+                        {/* MRR GROWTH CHART SECTION */}
+                        <div className="pt-6 border-t border-slate-200">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <DollarSign size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-800">MRR Growth Projection</h2>
+                                    <p className="text-sm text-slate-500">Monthly Recurring Revenue with Churn Impact</p>
+                                </div>
+                            </div>
+
+                            <Card className="p-6">
+                                <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
+                                    <MRRChart data={mrrChartData} height={320} />
+                                </div>
+                                <div className="mt-4 flex gap-6 text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                                        <span className="text-slate-600">Gross MRR</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                        <span className="text-slate-600">Net MRR (After Churn)</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                                        <span className="text-slate-600">Churn Impact</span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
 
                         {/* Projections Section */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -834,6 +1124,7 @@ export default function SaaSPricingCalculator() {
                             </Card>
                         </div>
 
+
                         {/* PROFIT WHALE CURVE SECTION */}
                         <div className="pt-6 border-t border-slate-200">
                             <div className="flex items-center gap-2 mb-6">
@@ -854,7 +1145,13 @@ export default function SaaSPricingCalculator() {
                                         <p className="text-xs text-slate-400">Cumulative Profit % by Customer Percentile</p>
                                     </div>
                                     <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
-                                        <WhaleChart data={whaleData.points} type="profit" />
+                                        {isMounted ? (
+                                            <WhaleChart data={whaleData.points} type="profit" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                                Loading chart...
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="mt-4 text-xs text-slate-500 flex gap-4">
                                         <div className="flex items-center gap-1">
@@ -875,7 +1172,13 @@ export default function SaaSPricingCalculator() {
                                         <p className="text-xs text-slate-400">Cumulative Margin % by Customer Percentile</p>
                                     </div>
                                     <div className="h-80 w-full bg-slate-50 rounded-lg border border-slate-100 relative">
-                                        <WhaleChart data={whaleData.points} type="margin" />
+                                        {isMounted ? (
+                                            <WhaleChart data={whaleData.points} type="margin" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                                Loading chart...
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="mt-4 text-xs text-slate-500">
                                         <p>Targeting ~80% margin until the unprofitable tail drags it down.</p>
@@ -883,6 +1186,8 @@ export default function SaaSPricingCalculator() {
                                 </Card>
                             </div>
                         </div>
+
+
 
                         {/* Detailed Breakdown (Compact) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
