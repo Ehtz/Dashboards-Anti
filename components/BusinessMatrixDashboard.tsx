@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson, Calculator, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, X, Check, Search, Info, TrendingUp, Shield, Cpu, Users, DollarSign, Brain, Globe, Activity, Layers, Target, Zap, Lock, BarChart3, RotateCcw, Copy, Download, Upload, FileJson, Calculator, Eye, EyeOff, Wallet, CreditCard, Repeat, Clock, PieChart, Megaphone, Sparkles, Settings, Rocket, Heart, Star, Lightbulb, Award, Flame, Compass, Gem, Crown, Gauge, CircleDollarSign, Briefcase, Scale } from 'lucide-react';
 
 // --- Types & Constants ---
 
@@ -25,6 +25,7 @@ const MATRICES = [
         xKey: 'frequency',
         yKey: 'netMargin',
         icon: DollarSign,
+        color: '#10b981', // Emerald
         lowLow: 'Cash Burner',
         lowHigh: 'High Churn Risk',
         highLow: 'Niche Profitable',
@@ -39,7 +40,8 @@ const MATRICES = [
         yAxis: 'Gross Margin %',
         xKey: 'frequency',
         yKey: 'grossMargin',
-        icon: DollarSign,
+        icon: Wallet,
+        color: '#14b8a6', // Teal
         lowLow: 'Commodity',
         lowHigh: 'Volume Play',
         highLow: 'Premium Service',
@@ -54,7 +56,8 @@ const MATRICES = [
         yAxis: 'ARPU (1yr)',
         xKey: 'frequency',
         yKey: 'arpu',
-        icon: Activity,
+        icon: CreditCard,
+        color: '#06b6d4', // Cyan
         lowLow: 'Low Value',
         lowHigh: 'Ad/Micro-trans',
         highLow: 'Enterprise (One-off)',
@@ -70,6 +73,7 @@ const MATRICES = [
         xKey: 'frequency',
         yKey: 'ltv',
         icon: TrendingUp,
+        color: '#0ea5e9', // Sky
         lowLow: 'Churn Factory',
         lowHigh: 'Utility Subscription',
         highLow: 'Consulting Model',
@@ -84,7 +88,8 @@ const MATRICES = [
         yAxis: 'Buying Frequency',
         xKey: 'frequency',
         yKey: 'buyingFreq1y',
-        icon: Activity,
+        icon: Repeat,
+        color: '#3b82f6', // Blue
         lowLow: 'Rare Purchase',
         lowHigh: 'Free/Ad-Supported',
         highLow: 'Automated/Forced',
@@ -99,7 +104,8 @@ const MATRICES = [
         yAxis: 'Buying Frequency',
         xKey: 'frequency',
         yKey: 'buyingFreq5y',
-        icon: TrendingUp,
+        icon: Clock,
+        color: '#6366f1', // Indigo
         lowLow: 'One-off',
         lowHigh: 'Engaged Free',
         highLow: 'Recurring Utility',
@@ -117,6 +123,7 @@ const MATRICES = [
         xKey: 'tam',
         yKey: 'arpu',
         icon: Globe,
+        color: '#8b5cf6', // Violet
         lowLow: 'Niche Hobby',
         lowHigh: 'Mass Market',
         highLow: 'Boutique Luxury',
@@ -132,6 +139,7 @@ const MATRICES = [
         xKey: 'sam',
         yKey: 'arpu',
         icon: Target,
+        color: '#a855f7', // Purple
         lowLow: 'Local Player',
         lowHigh: 'Regional Vol',
         highLow: 'Specialized High-End',
@@ -146,7 +154,8 @@ const MATRICES = [
         yAxis: 'ARPU',
         xKey: 'som',
         yKey: 'arpu',
-        icon: Target,
+        icon: Compass,
+        color: '#d946ef', // Fuchsia
         lowLow: 'Struggling',
         lowHigh: 'Commodity Winner',
         highLow: 'Profitable Niche',
@@ -161,7 +170,8 @@ const MATRICES = [
         yAxis: 'LTV',
         xKey: 'cac',
         yKey: 'ltv',
-        icon: BarChart3,
+        icon: Scale,
+        color: '#ec4899', // Pink
         lowLow: 'The Graveyard',
         lowHigh: 'Venture Burn',
         highLow: 'Organic/Viral',
@@ -179,6 +189,7 @@ const MATRICES = [
         xKey: 'shippingSpeed',
         yKey: 'quality',
         icon: Zap,
+        color: '#f43f5e', // Rose
         lowLow: 'Doomed',
         lowHigh: 'Move Fast Break Things',
         highLow: 'Legacy Bank',
@@ -193,7 +204,8 @@ const MATRICES = [
         yAxis: 'Number of avg opportunities to share prod (0-100)',
         xKey: 'frequency',
         yKey: 'shareOpp',
-        icon: Users,
+        icon: Megaphone,
+        color: '#ef4444', // Red
         lowLow: 'Secret Tool',
         lowHigh: 'Habitual',
         highLow: 'Referral Driven',
@@ -209,6 +221,7 @@ const MATRICES = [
         xKey: 'cognitiveLoad',
         yKey: 'arpu',
         icon: Brain,
+        color: '#f97316', // Orange
         lowLow: 'Cheap & Simple',
         lowHigh: 'Consumer App',
         highLow: 'Enterprise Complex',
@@ -223,7 +236,8 @@ const MATRICES = [
         yAxis: 'Customer Satisafction / Retention',
         xKey: 'marketSize',
         yKey: 'nps',
-        icon: Check,
+        icon: Rocket,
+        color: '#fb923c', // Amber
         lowLow: 'Pivot Needed',
         lowHigh: 'Leaky Bucket',
         highLow: 'Cult Product',
@@ -239,6 +253,7 @@ const MATRICES = [
         xKey: 'clarity',
         yKey: 'buyability',
         icon: Layers,
+        color: '#fbbf24', // Yellow
         lowLow: 'Consultative Sale',
         lowHigh: 'Visionary Sell',
         highLow: 'Commodity',
@@ -256,6 +271,7 @@ const MATRICES = [
         xKey: 'control',
         yKey: 'risk',
         icon: Shield,
+        color: '#84cc16', // Lime
         lowLow: 'Platform Dependent',
         lowHigh: 'Walled Garden',
         highLow: 'Gambling',
@@ -271,6 +287,7 @@ const MATRICES = [
         xKey: 'complexity',
         yKey: 'arpu',
         icon: Lock,
+        color: '#22c55e', // Green
         lowLow: 'Wrapper',
         lowHigh: 'Over-engineered',
         highLow: 'Deep Tech',
@@ -285,7 +302,8 @@ const MATRICES = [
         yAxis: 'Daily Mind Share',
         xKey: 'frequency',
         yKey: 'mindShare',
-        icon: Brain,
+        icon: Sparkles,
+        color: '#2dd4bf', // Emerald light
         lowLow: 'Forgotten',
         lowHigh: 'Addiction',
         highLow: 'Utility (Plumbing)',
@@ -301,6 +319,7 @@ const MATRICES = [
         xKey: 'humanInput',
         yKey: 'aiAutonomy',
         icon: Cpu,
+        color: '#38bdf8', // Sky light
         lowLow: 'Legacy Tool',
         lowHigh: 'Consultancy',
         highLow: 'Black Box',
@@ -315,7 +334,8 @@ const MATRICES = [
         yAxis: 'Output in USD',
         xKey: 'timeInput',
         yKey: 'output',
-        icon: TrendingUp,
+        icon: Gauge,
+        color: '#818cf8', // Indigo light
         lowLow: 'Slog',
         lowHigh: 'Service Biz',
         highLow: 'High Leverage',
@@ -330,7 +350,8 @@ const MATRICES = [
         yAxis: 'Men % of Customers',
         xKey: 'womenPercent',
         yKey: 'menPercent',
-        icon: Users,
+        icon: Heart,
+        color: '#f472b6', // Pink light
         lowLow: 'Undefined Segment',
         lowHigh: 'Male Dominated',
         highLow: 'Female Dominated',
@@ -345,7 +366,8 @@ const MATRICES = [
         yAxis: 'ARR (Annual Recurring Revenue)',
         xKey: 'frequency',
         yKey: 'arr',
-        icon: TrendingUp,
+        icon: Flame,
+        color: '#fb7185', // Rose light
         lowLow: 'Low Engagement',
         lowHigh: 'High Value Infrequent',
         highLow: 'High Engagement Low Rev',
@@ -360,12 +382,29 @@ const MATRICES = [
         yAxis: 'ARR (Annual Recurring Revenue)',
         xKey: 'complexity',
         yKey: 'arr',
-        icon: DollarSign,
+        icon: CircleDollarSign,
+        color: '#a3e635', // Lime light
         lowLow: 'Simple Low Revenue',
         lowHigh: 'Simple High Revenue',
         highLow: 'Over-engineered',
         highHigh: 'Enterprise Scale',
         xStart: 'Simple', xEnd: 'Complex', yStart: '$0', yEnd: '$100M+'
+    },
+    {
+        id: 'idea-quality',
+        group: MATRIX_GROUPS.PRODUCT,
+        title: 'Idea Quality Matrix',
+        xAxis: 'Effort / Resources',
+        yAxis: 'Idea Quality',
+        xKey: 'ideaEffort',
+        yKey: 'ideaQuality',
+        icon: Lightbulb,
+        color: '#facc15', // Yellow bright
+        lowLow: 'Avoid',
+        lowHigh: 'Easy Win',
+        highLow: 'Money Pit',
+        highHigh: 'Moonshot',
+        xStart: 'Low', xEnd: 'High', yStart: 'Bad Idea', yEnd: 'Best Idea'
     }
 ];
 
@@ -385,7 +424,8 @@ const INITIAL_BUSINESSES = [
             arr: 90,
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
-            womenPercent: 45, menPercent: 52
+            womenPercent: 45, menPercent: 52,
+            ideaEffort: 75, ideaQuality: 85
         },
         // We duplicate scores to initialScores to allow "Reset to Default"
         initialScores: {
@@ -397,7 +437,8 @@ const INITIAL_BUSINESSES = [
             arr: 90,
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
-            womenPercent: 45, menPercent: 52
+            womenPercent: 45, menPercent: 52,
+            ideaEffort: 75, ideaQuality: 85
         },
         reasoning: "FedEx combines extreme efficiency (hub-and-spoke) with robust resilience. High trust, high utility, massive infrastructure moat."
     },
@@ -415,7 +456,8 @@ const INITIAL_BUSINESSES = [
             arr: 55,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
-            womenPercent: 50, menPercent: 48
+            womenPercent: 50, menPercent: 48,
+            ideaEffort: 50, ideaQuality: 80
         },
         initialScores: {
             frequency: 90, netMargin: 30, grossMargin: 85, arpu: 40, ltv: 75,
@@ -426,7 +468,8 @@ const INITIAL_BUSINESSES = [
             arr: 55,
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
-            womenPercent: 50, menPercent: 48
+            womenPercent: 50, menPercent: 48,
+            ideaEffort: 50, ideaQuality: 80
         },
         reasoning: "High virality PLG motion. High AI integration. Slightly higher cognitive load due to flexibility."
     }
@@ -439,10 +482,12 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
 
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-full hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-full hover:shadow-md transition-shadow" style={{ borderTopColor: matrix.color, borderTopWidth: '3px' }}>
             {/* Header */}
             <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
-                <matrix.icon className="w-5 h-5 text-slate-500" />
+                <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${matrix.color}20` }}>
+                    <matrix.icon className="w-5 h-5" style={{ color: matrix.color }} />
+                </div>
                 <h3 className="font-bold text-slate-800 text-sm">{matrix.title}</h3>
             </div>
 
@@ -450,12 +495,12 @@ const MatrixChart = ({ matrix, businesses, onUpdateScore }: any) => {
             <div className="relative pl-28 pt-8 pb-6 pr-2">
                 {/* Y Axis Label - Top Center */}
                 <div className="absolute top-0 left-28 right-2 flex items-center justify-center pointer-events-none h-8">
-                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.yAxis}</span>
+                    <span className="text-xs font-bold whitespace-nowrap tracking-wider" style={{ color: matrix.color }}>{matrix.yAxis}</span>
                 </div>
 
                 {/* X Axis Label - Left Center (Horizontal) */}
                 <div className="absolute left-0 top-8 bottom-6 w-28 flex items-center justify-end pr-3 pointer-events-none">
-                    <span className="text-xs font-bold text-red-600 whitespace-nowrap tracking-wider">{matrix.xAxis}</span>
+                    <span className="text-xs font-bold whitespace-nowrap tracking-wider" style={{ color: matrix.color }}>{matrix.xAxis}</span>
                 </div>
 
                 {/* Y Axis Start/End Labels */}
