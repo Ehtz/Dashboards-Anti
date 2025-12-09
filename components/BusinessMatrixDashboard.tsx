@@ -405,6 +405,54 @@ const MATRICES = [
         highLow: 'Money Pit',
         highHigh: 'Moonshot',
         xStart: 'Low', xEnd: 'High', yStart: 'Bad Idea', yEnd: 'Best Idea'
+    },
+    {
+        id: 'value-velocity',
+        group: MATRIX_GROUPS.MARKET,
+        title: 'Kinetic vs. Potential Energy',
+        xAxis: 'Flow Velocity (Kinetic Energy)',
+        yAxis: 'Value Capture (Potential Energy)',
+        xKey: 'velocity',
+        yKey: 'valuePotential',
+        icon: Activity,
+        color: '#0891b2', // Cyan dark
+        lowLow: 'THE STAGNANT POND (Commodity) - Pivot or Automate',
+        lowHigh: 'THE GLACIER (Deep Moats) - Optimize LTV/CAC',
+        highLow: 'THE RAPIDS (Viral Engines) - Scale Volume & Network Effects',
+        highHigh: 'THE TSUNAMI (Sovereign Ecosystems) - Lock-in & Cross-sell',
+        xStart: 'Low Flow', xEnd: 'High Flow', yStart: 'Low Potential', yEnd: 'High Potential'
+    },
+    {
+        id: 'kinetic-matrix',
+        group: MATRIX_GROUPS.PRODUCT,
+        title: 'The Kinetic Matrix (Speed & Friction)',
+        xAxis: 'Friction (Resistance to Entry)',
+        yAxis: 'Velocity (Viral/Shipping Speed)',
+        xKey: 'frictionResistance',
+        yKey: 'kineticVelocity',
+        icon: Zap,
+        color: '#f59e0b', // Amber
+        lowLow: 'THE DINOSAUR - Stagnant Swamp (Consultative, Slow, Bureaucracy)',
+        lowHigh: 'THE CULT - Tidal Wave (High CAC but Unstoppable Desire)',
+        highLow: 'THE COMMODITY - Leaky Bucket (Easy buy, High Churn)',
+        highHigh: 'THE VIRAL STORM - Flash Flood (PLG, Self-Serve, No Brainer)',
+        xStart: 'High Friction', xEnd: 'Low Friction', yStart: 'Slow Moving', yEnd: 'Fast Moving'
+    },
+    {
+        id: 'potential-matrix',
+        group: MATRIX_GROUPS.OPERATIONS,
+        title: 'The Potential Matrix (Value & Control)',
+        xAxis: 'Ecosystem Control (Dependencies)',
+        yAxis: 'Value Density (Margins/LTV)',
+        xKey: 'ecosystemControl',
+        yKey: 'valueDensity',
+        icon: Crown,
+        color: '#7c3aed', // Violet
+        lowLow: 'THE GRIND - Scraps (Price Competition, Graveyard)',
+        lowHigh: 'THE CONSULTANCY - Manual Labor (High Margins, Hard to Scale)',
+        highLow: 'THE UTILITY - Tax (Low ARPU, High Mind Share, Habitual)',
+        highHigh: 'THE FORTRESS - Rent Collection (Walled Garden, Sovereign)',
+        xStart: 'Low Control', xEnd: 'High Control', yStart: 'Low Value', yEnd: 'High Value'
     }
 ];
 
@@ -425,7 +473,10 @@ const INITIAL_BUSINESSES = [
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
             womenPercent: 45, menPercent: 52,
-            ideaEffort: 75, ideaQuality: 85
+            ideaEffort: 75, ideaQuality: 85,
+            velocity: 70, valuePotential: 90,
+            frictionResistance: 25, kineticVelocity: 85,
+            ecosystemControl: 95, valueDensity: 90
         },
         // We duplicate scores to initialScores to allow "Reset to Default"
         initialScores: {
@@ -438,7 +489,10 @@ const INITIAL_BUSINESSES = [
             humanInput: 80, aiAutonomy: 40, timeInput: 50, output: 85,
             buyingFreq1y: 70, buyingFreq5y: 75,
             womenPercent: 45, menPercent: 52,
-            ideaEffort: 75, ideaQuality: 85
+            ideaEffort: 75, ideaQuality: 85,
+            velocity: 70, valuePotential: 90,
+            frictionResistance: 25, kineticVelocity: 85,
+            ecosystemControl: 95, valueDensity: 90
         },
         reasoning: "FedEx combines extreme efficiency (hub-and-spoke) with robust resilience. High trust, high utility, massive infrastructure moat."
     },
@@ -457,7 +511,10 @@ const INITIAL_BUSINESSES = [
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
             womenPercent: 50, menPercent: 48,
-            ideaEffort: 50, ideaQuality: 80
+            ideaEffort: 50, ideaQuality: 80,
+            velocity: 85, valuePotential: 75,
+            frictionResistance: 90, kineticVelocity: 90,
+            ecosystemControl: 70, valueDensity: 35
         },
         initialScores: {
             frequency: 90, netMargin: 30, grossMargin: 85, arpu: 40, ltv: 75,
@@ -469,7 +526,10 @@ const INITIAL_BUSINESSES = [
             humanInput: 60, aiAutonomy: 85, timeInput: 20, output: 90,
             buyingFreq1y: 40, buyingFreq5y: 45,
             womenPercent: 50, menPercent: 48,
-            ideaEffort: 50, ideaQuality: 80
+            ideaEffort: 50, ideaQuality: 80,
+            velocity: 85, valuePotential: 75,
+            frictionResistance: 90, kineticVelocity: 90,
+            ecosystemControl: 70, valueDensity: 35
         },
         reasoning: "High virality PLG motion. High AI integration. Slightly higher cognitive load due to flexibility."
     }
